@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -80,13 +79,6 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
   }
 
   void startLocalServer() async {
-    if (kIsWeb) {
-      setState(() {
-        statusMessage = "السيرفر المحلي غير مدعوم على متصفح الويب";
-      });
-      return;
-    }
-
     try {
       socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 8888);
       setState(() {
