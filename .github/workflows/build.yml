@@ -13,6 +13,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.4'
+      - run: flutter create . --platforms=android
       - run: flutter pub get
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v3
@@ -27,6 +28,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.4'
+      - run: flutter create . --platforms=windows
       - run: flutter pub get
       - run: flutter build windows
       - uses: actions/upload-artifact@v3
