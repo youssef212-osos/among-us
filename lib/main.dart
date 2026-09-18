@@ -6,14 +6,93 @@ void main() {
   runApp(const BuzzyAmongUsApp());
 }
 
-class BuzzyAmongUsApp extends StatelessWidget {
+// نظام اللغات البسيط داخل التطبيق (عربي / إنجليزي)
+class AppLocalizations {
+  final Locale locale;
+  AppLocalizations(this.locale);
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const _localizedValues = {
+    'ar': {
+      'appTitle': 'باري فارتي: إمبوستر',
+      'chooseProfile': 'اختر شخصيتك واسمك',
+      'usernameHint': 'أدخل اسمك هنا...',
+      'enterGame': 'دخول للعبة 🚀',
+      'createLocal': 'إنشاء لعبة لوكال',
+      'joinHotspot': 'ادخل لعبة (Hotspot)',
+      'settings': 'الإعدادات',
+      'language': 'لغة التطبيق (Language)',
+      'roomsCount': 'اختر عدد غرف الشقة:',
+      'openRoom': 'فتح روم 🚪',
+      'searching': 'جاري البحث عن أجهزة متصلة بالهوتسبوت أو الشبكة...',
+      'foundDevices': 'تم العثور على أجهزة متصلة بالروم:',
+      'startGameNow': 'بدء الجيم الآن 🚀',
+      'youArrived': 'أنت وصلت؟ (ابدأ العد)',
+      'taskCompleted': 'تم إنجاز المهمة بنجاح!',
+      'sabotageAlert': '🚨 سابوتاج تم تنفيذه في',
+      'repairIt': 'صلحت السابوتاج',
+      'wheelTitle': '🎡 عجلة الحظ: من هو الإمبوستر؟',
+      'spinning': 'جاري سحب الأدوار عشوائياً...',
+    },
+    'en': {
+      'appTitle': 'Buzzy Party: Imposter',
+      'chooseProfile': 'Choose Your Avatar & Name',
+      'usernameHint': 'Enter your username...',
+      'enterGame': 'Enter Game 🚀',
+      'createLocal': 'Create Local Game',
+      'joinHotspot': 'Join Game (Hotspot)',
+      'settings': 'Settings',
+      'language': 'Language / اللغة',
+      'roomsCount': 'Select Apartment Rooms:',
+      'openRoom': 'Open Room 🚪',
+      'searching': 'Scanning for nearby hotspot & network devices...',
+      'foundDevices': 'Connected players found:',
+      'startGameNow': 'Start Match Now 🚀',
+      'youArrived': 'Are You There? (Start Timer)',
+      'taskCompleted': 'Task Completed Successfully!',
+      'sabotageAlert': '🚨 Sabotage triggered in',
+      'repairIt': 'Repair Sabotage',
+      'wheelTitle': '🎡 Lucky Wheel: Who is the Imposter?',
+      'spinning': 'Spinning roles randomly...',
+    }
+  };
+
+  String get(String key) {
+    return _localizedValues[locale.languageCode]?[key] ?? key;
+  }
+}
+
+class BuzzyAmongUsApp extends StatefulWidget {
   const BuzzyAmongUsApp({super.key});
+
+  @override
+  State<BuzzyAmongUsApp> createState() => _BuzzyAmongUsAppState();
+
+  static void setLocale(BuildContext context, Locale newLocale) {
+    _BuzzyAmongUsAppState? state = context.findAncestorStateOfType<_BuzzyAmongUsAppState>();
+    state?.setLocale(newLocale);
+  }
+}
+
+class _BuzzyAmongUsAppState extends State<BuzzyAmongUsApp> {
+  Locale _locale = const Locale('ar'); // الافتراضي عربي
+
+  void setLocale(Locale locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Buzzy Party: Imposter Alive',
+      title: 'Buzzy Party',
       debugShowCheckedModeBanner: false,
+      locale: _locale,
+      supportedLocales: const [Locale('ar', ''), Locale('en', '')],
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF130924),
         primaryColor: const Color(0xFF8B5CF6),
@@ -23,7 +102,7 @@ class BuzzyAmongUsApp extends StatelessWidget {
   }
 }
 
-// شاشة اختيار الاسم والأفاتار أول ما التطبيق يفتح
+// شاشة اختيار الاسم والأفاتارات الاحترافية
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -32,13 +111,26 @@ class ProfileSetupScreen extends StatefulWidget {
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  final TextEditingController nameController = TextEditingController(text: 'Youssef Aly');
+  final TextEditingController nameController = TextEditingController(text: ''); // تركها فارغة تماماً
   int selectedAvatarIndex = 0;
 
-  final List<String> avatars = ['🐱', '🐶', '🦊', '🐼', '🦁', '🐯', '🐨', '🐵', '🤖', '👻'];
+  // أفاتارات ألعاب موبايل احترافية وجاهزة
+  final List<String> avatars = [
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_1.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_2.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_3.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_4.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_1.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_5.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/toon_1.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/toon_4.png',
+  ];
 
   @override
   Widget build(BuildContext context) {
+    // ترجمة مؤقتة سريعة حسب اللغة الحالية
+    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -46,20 +138,38 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('اختر شخصيتك واسمك', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFFFACC15))),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.amber, size: 28),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                    },
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                isArabic ? 'اختر شخصيتك واسمك' : 'Choose Your Avatar & Name',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFFFACC15)),
+              ),
               const SizedBox(height: 20),
               
-              // عرض الأفاتار المختار مع إمكانية التغيير
               Container(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.all(10),
                 decoration: const BoxDecoration(color: Color(0xFF231145), shape: BoxShape.circle),
-                child: Text(avatars[selectedAvatarIndex], style: const TextStyle(fontSize: 50)),
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.transparent,
+                  backgroundImage: NetworkImage(avatars[selectedAvatarIndex]),
+                ),
               ),
               const SizedBox(height: 15),
 
-              // شبكة اختيار 10 أفاتارات
+              // شبكة اختيار الأفاتارات الاحترافية
               SizedBox(
-                height: 60,
+                height: 70,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: avatars.length,
@@ -67,14 +177,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     return GestureDetector(
                       onTap: () => setState(() => selectedAvatarIndex = index),
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 5),
-                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: selectedAvatarIndex == index ? const Color(0xFF8B5CF6) : const Color(0xFF1E0C3B),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: selectedAvatarIndex == index ? Colors.white : Colors.transparent, width: 2),
                         ),
-                        child: Text(avatars[index], style: const TextStyle(fontSize: 24)),
+                        child: CircleAvatar(
+                          backgroundImage: NetworkImage(avatars[index]),
+                          radius: 25,
+                        ),
                       ),
                     );
                   },
@@ -85,7 +198,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
-                  labelText: 'اسم اليوزر',
+                  labelText: isArabic ? 'أدخل اسمك (مثال: يوسف)' : 'Enter your name (e.g. Youssef)',
                   filled: true,
                   fillColor: const Color(0xFF231145),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -106,14 +219,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       MaterialPageRoute(
                         builder: (context) => BuzzyHomeScreen(
                           username: nameController.text,
-                          avatar: avatars[selectedAvatarIndex],
+                          avatarUrl: avatars[selectedAvatarIndex],
                         ),
                       ),
                     );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('⚠️ برجاء كتابة الاسم أولاً!')),
+                    );
                   }
                 },
-                child: const Text('دخول للعبة 🚀', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: Text(isArabic ? 'دخول للعبة 🚀' : 'Enter Game 🚀', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
+              const Spacer(),
             ],
           ),
         ),
@@ -122,14 +240,63 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 }
 
-class BuzzyHomeScreen extends StatelessWidget {
-  final String username;
-  final String avatar;
-
-  const BuzzyHomeScreen({super.key, required this.username, required this.avatar});
+// شاشة الإعدادات لتغيير اللغة وتعديل البروفايل
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isArabic ? 'الإعدادات' : 'Settings'),
+        backgroundColor: const Color(0xFF1E0C3B),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: const Color(0xFF231145), borderRadius: BorderRadius.circular(16)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(isArabic ? 'لغة التطبيق' : 'App Language', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  DropdownButton<Locale>(
+                    value: Localizations.localeOf(context),
+                    dropdownColor: const Color(0xFF1E0C3B),
+                    items: const [
+                      DropdownMenuItem(value: Locale('ar'), child: Text('العربية 🇪🇬')),
+                      DropdownMenuItem(value: Locale('en'), child: Text('English 🇺🇸')),
+                    ],
+                    onChanged: (Locale? newLocale) {
+                      if (newLocale != null) {
+                        BuzzyAmongUsApp.setLocale(context, newLocale);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BuzzyHomeScreen extends StatelessWidget {
+  final String username;
+  final String avatarUrl;
+
+  const BuzzyHomeScreen({super.key, required this.username, required this.avatarUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -139,27 +306,25 @@ class BuzzyHomeScreen extends StatelessWidget {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: const Color(0xFF4ADE80),
+                    backgroundImage: NetworkImage(avatarUrl),
                     radius: 22,
-                    child: Text(avatar, style: const TextStyle(fontSize: 22)),
                   ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(username, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      // كلمة مستخدم باللون الأحمر الواضح كما طلبت
-                      const Text('مستخدم', style: TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(isArabic ? 'مستخدم' : 'User', style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.grey),
-                    onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProfileSetupScreen())),
+                    icon: const Icon(Icons.settings, color: Colors.amber),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen())),
                   )
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
               Column(
                 children: [
@@ -187,21 +352,21 @@ class BuzzyHomeScreen extends StatelessWidget {
               const Spacer(),
 
               _buildBuzzyButton(
-                title: 'إنشاء لعبة لوكال',
+                title: isArabic ? 'إنشاء لعبة لوكال' : 'Create Local Game',
                 color: const Color(0xFF8B5CF6),
                 icon: Icons.gavel_rounded,
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => GameSetupScreen(username: username, avatar: avatar)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => GameSetupScreen(username: username, avatarUrl: avatarUrl)));
                 },
               ),
               const SizedBox(height: 15),
 
               _buildBuzzyButton(
-                title: 'ادخل لعبة (Hotspot)',
+                title: isArabic ? 'ادخل لعبة (Hotspot)' : 'Join Game (Hotspot)',
                 color: const Color(0xFFFB923C),
                 icon: Icons.touch_app_rounded,
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => GameSetupScreen(username: username, avatar: avatar)));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => GameSetupScreen(username: username, avatarUrl: avatarUrl)));
                 },
               ),
               const Spacer(),
@@ -243,23 +408,24 @@ class BuzzyHomeScreen extends StatelessWidget {
 
 class GameSetupScreen extends StatefulWidget {
   final String username;
-  final String avatar;
+  final String avatarUrl;
 
-  const GameSetupScreen({super.key, required this.username, required this.avatar});
+  const GameSetupScreen({super.key, required this.username, required this.avatarUrl});
 
   @override
   State<GameSetupScreen> createState() => _GameSetupScreenState();
 }
 
 class _GameSetupScreenState extends State<GameSetupScreen> {
-  int roomsCount = 4; // القيمة الافتراضية 4 غرف
+  int roomsCount = 4;
 
   @override
   Widget build(BuildContext context) {
+    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إعدادات اللعبة', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        title: Text(isArabic ? 'إعدادات الشقة' : 'Room Setup'),
         backgroundColor: const Color(0xFF1E0C3B),
       ),
       body: Padding(
@@ -273,14 +439,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('🏠 اختر عدد غرف الشقة:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(isArabic ? '🏠 اختر عدد غرف الشقة:' : 'Select Rooms Count:', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [2, 3, 4, 5].map((num) {
                       bool isSelected = roomsCount == num;
                       return ChoiceChip(
-                        label: Text('$num غرف'),
+                        label: Text(isArabic ? '$num غرف' : '$num Rooms'),
                         selected: isSelected,
                         selectedColor: const Color(0xFFFB923C),
                         onSelected: (val) => setState(() => roomsCount = num),
@@ -291,8 +457,6 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
               ),
             ),
             const Spacer(),
-
-            // زر فتح روم المباشر
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF8B5CF6),
@@ -305,13 +469,13 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                   MaterialPageRoute(
                     builder: (context) => LocalRoomSearchScreen(
                       username: widget.username,
-                      avatar: widget.avatar,
+                      avatarUrl: widget.avatarUrl,
                       roomCount: roomsCount,
                     ),
                   ),
                 );
               },
-              child: const Text('فتح روم 🚪', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(isArabic ? 'فتح روم 🚪' : 'Open Room 🚪', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             )
           ],
         ),
@@ -320,33 +484,32 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   }
 }
 
-// شاشة البحث عن الأجهزة المفتوحة على نفس الهوتسبوت أو الشبكة المحلية
+// شاشة البحث عن الأجهزة (مبدئياً تبدأ بيك أنت فقط بدون أسماء وهمية)
 class LocalRoomSearchScreen extends StatefulWidget {
   final String username;
-  final String avatar;
+  final String avatarUrl;
   final int roomCount;
 
-  const LocalRoomSearchScreen({super.key, required this.username, required this.avatar, required this.roomCount});
+  const LocalRoomSearchScreen({super.key, required this.username, required this.avatarUrl, required this.roomCount});
 
   @override
   State<LocalRoomSearchScreen> createState() => _LocalRoomSearchScreenState();
 }
 
 class _LocalRoomSearchScreenState extends State<LocalRoomSearchScreen> {
-  List<String> connectedPlayers = [];
+  List<Map<String, String>> connectedPlayers = [];
   bool isScanning = true;
 
   @override
   void initState() {
     super.initState();
-    connectedPlayers.add('${widget.avatar} ${widget.username} (الهوست)');
-    
+    // تبدأ القائمة بك أنت فقط (الهوست) بدون أي أسماء غريبة
+    connectedPlayers.add({'name': widget.username, 'avatar': widget.avatarUrl});
+
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           isScanning = false;
-          connectedPlayers.add('🤖 أحمد (شبكة الهوتسبوت)');
-          connectedPlayers.add('🦊 محمود (الشبكة المحلية)');
         });
       }
     });
@@ -354,9 +517,11 @@ class _LocalRoomSearchScreenState extends State<LocalRoomSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('البحث عن لاعبين بالشبكة', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(isArabic ? 'البحث عن لاعبين بالشبكة' : 'Scanning Network'),
         backgroundColor: const Color(0xFF1E0C3B),
       ),
       body: Padding(
@@ -366,9 +531,9 @@ class _LocalRoomSearchScreenState extends State<LocalRoomSearchScreen> {
             if (isScanning) ...[
               const CircularProgressIndicator(color: Color(0xFFFACC15)),
               const SizedBox(height: 15),
-              const Text('جاري البحث عن أجهزة متصلة بالهوتسبوت أو الشبكة اللوكال...', style: TextStyle(color: Colors.grey)),
+              Text(isArabic ? 'جاري البحث عن أجهزة متصلة بالهوتسبوت...' : 'Scanning for hotspot devices...', style: const TextStyle(color: Colors.grey)),
             ] else ...[
-              const Text('✅ تم العثور على أجهزة متصلة بالروم:', style: TextStyle(color: Color(0xFF4ADE80), fontWeight: FontWeight.bold)),
+              Text(isArabic ? '✅ تم العثور على أجهزة متصلة بالروم:' : '✅ Connected players found:', style: const TextStyle(color: Color(0xFF4ADE80), fontWeight: FontWeight.bold)),
             ],
             const SizedBox(height: 20),
             Expanded(
@@ -378,8 +543,11 @@ class _LocalRoomSearchScreenState extends State<LocalRoomSearchScreen> {
                   return Card(
                     color: const Color(0xFF231145),
                     child: ListTile(
-                      leading: const Icon(Icons.person, color: Color(0xFF38BDF8)),
-                      title: Text(connectedPlayers[index], style: const TextStyle(color: Colors.white)),
+                      leading: CircleAvatar(
+                        backgroundImage: NetworkImage(connectedPlayers[index]['avatar']!),
+                      ),
+                      title: Text(connectedPlayers[index]['name']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      subtitle: const Text('متصل بالشبكة المحلية', style: TextStyle(fontSize: 11, color: Colors.grey)),
                     ),
                   );
                 },
@@ -392,20 +560,98 @@ class _LocalRoomSearchScreenState extends State<LocalRoomSearchScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               onPressed: () {
-                List<String> rawNames = connectedPlayers.map((p) => p.split(' ').sublist(1).join(' ')).toList();
+                List<String> rawNames = connectedPlayers.map((p) => p['name']!).toList();
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MainGameRoomScreen(
+                    builder: (context) => RoleWheelScreen(
                       playerNames: rawNames,
                       roomCount: widget.roomCount,
-                      imposterIndices: const [1],
                     ),
                   ),
                 );
               },
-              child: const Text('بدء الجيم الآن 🚀', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+              child: Text(isArabic ? 'بدء الجيم الآن 🚀' : 'Start Match Now 🚀', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
             )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// شاشة عجلة الحظ لاختيار الأدوار (Imposter / Crewmate)
+class RoleWheelScreen extends StatefulWidget {
+  final List<String> playerNames;
+  final int roomCount;
+
+  const RoleWheelScreen({super.key, required this.playerNames, required this.roomCount});
+
+  @override
+  State<RoleWheelScreen> createState() => _RoleWheelScreenState();
+}
+
+class _RoleWheelScreenState extends State<RoleWheelScreen> {
+  bool isSpinning = true;
+  String assignedRoleText = 'جارٍ سحب الأدوار عشوائياً...';
+  List<int> imposterIndices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    startSpinningWheel();
+  }
+
+  void startSpinningWheel() {
+    final random = Random();
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          isSpinning = false;
+          // اختيار عشوائي للإمبوستر
+          int impIndex = random.nextInt(widget.playerNames.length);
+          imposterIndices = [impIndex];
+          assignedRoleText = 'تم تحديد الأدوار بنجاح!';
+        });
+
+        // الانتقال تلقائياً للجيم بعد عرض الدور بـ ثانيتين
+        Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainGameRoomScreen(
+                  playerNames: widget.playerNames,
+                  roomCount: widget.roomCount,
+                  imposterIndices: imposterIndices,
+                ),
+              ),
+            );
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF130924),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('🎡 عجلة الحظ للأدوار', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFFFACC15))),
+            const SizedBox(height: 40),
+            if (isSpinning) ...[
+              const CircularProgressIndicator(color: Color(0xFF8B5CF6), strokeWidth: 6),
+              const SizedBox(height: 25),
+              Text(assignedRoleText, style: const TextStyle(fontSize: 18, color: Colors.grey)),
+            ] else ...[
+              const Icon(Icons.check_circle_rounded, color: Color(0xFF4ADE80), size: 80),
+              const SizedBox(height: 15),
+              const Text('تم الكشف عن هويتك السرية!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+            ]
           ],
         ),
       ),
@@ -440,6 +686,11 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
   int sabotageTimerSeconds = 10;
   Timer? sabotageTimer;
 
+  // متغيرات مخصصة للعد التنازلي للمهام عند الأوضة
+  bool isTaskActive = false;
+  int taskCountdownSeconds = 0;
+  Timer? taskTimer;
+
   @override
   void initState() {
     super.initState();
@@ -447,43 +698,73 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
     start3SecPromptLoop();
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      playSoundNotification('أنا جيت! تم تشغيل ساوند إفكت الروم.');
+      showAudioSoundEffect('🔊 [تنبيه صوتي]: تم بدء الجيم وتشغيل المؤثرات بسلام!');
     });
   }
 
   void generateTasks() {
     final random = Random();
-    List<String> taskTypes = ['صلح السلك', 'امسح البصمات', 'نزل الملفات', 'شغل المولد'];
+    List<String> taskTypes = ['صلح السلك الكهربائي', 'امسح بصمات الأصابع', 'نزل الملفات السرية', 'شغل مولد الطاقة'];
     assignedTasks.clear();
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {
       int roomNum = random.nextInt(widget.roomCount) + 1;
       String roomName = 'غرفة $roomNum';
       String task = taskTypes[random.nextInt(taskTypes.length)];
-      assignedTasks.add('خش $roomName واعمل: $task');
+      assignedTasks.add('ادخل $roomName ونفذ: $task');
     }
   }
 
   void start3SecPromptLoop() {
     final random = Random();
     promptTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (assignedTasks.isNotEmpty && !isSabotageActive) {
+      if (assignedTasks.isNotEmpty && !isSabotageActive && !isTaskActive) {
         setState(() {
           int randomIndex = random.nextInt(assignedTasks.length);
-          currentInstruction = '📢 ${assignedTasks[randomIndex]} (المدة 10 ثواني)';
+          currentInstruction = '📢 ${assignedTasks[randomIndex]}';
         });
       }
     });
   }
 
-  void playSoundNotification(String text) {
+  // تنبيه بصري وصوتي واضح يظهر أعلى الشاشة كـ Sound Effect مرئي
+  void showAudioSoundEffect(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('🔊 $text', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+        content: Text(message, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color(0xFF8B5CF6),
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  // بدء العد التنازلي العشوائي للمهمة عند الضغط على "أنت وصلت؟" (من 3 لـ 10 ثواني)
+  void startTaskCountdown() {
+    final random = Random();
+    int randomSeconds = random.nextInt(8) + 3; // عدد عشوائي من 3 إلى 10 ثواني
+
+    setState(() {
+      isTaskActive = true;
+      taskCountdownSeconds = randomSeconds;
+    });
+
+    showAudioSoundEffect('⏱️ بدء عد تنازلي للمهمة: $randomSeconds ثواني!');
+
+    taskTimer?.cancel();
+    taskTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (taskCountdownSeconds > 1) {
+        setState(() => taskCountdownSeconds--);
+      } else {
+        timer.cancel();
+        setState(() {
+          isTaskActive = false;
+          if (assignedTasks.isNotEmpty) {
+            assignedTasks.removeAt(0); // إتمام المهمة الحالية
+          }
+        });
+        showAudioSoundEffect('✅ تم إنجاز المهمة بنجاح يا بطل!');
+      }
+    });
   }
 
   void startSabotage(String room) {
@@ -493,7 +774,7 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
       sabotageTimerSeconds = 10;
     });
 
-    playSoundNotification('عملت سابوتاج في $room!');
+    showAudioSoundEffect('🚨 تنبيه سابوتاج خطير في $room!');
 
     sabotageTimer?.cancel();
     sabotageTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -502,7 +783,7 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
       } else {
         timer.cancel();
         setState(() => isSabotageActive = false);
-        playSoundNotification('يا لوزر! محدش صلح السابوتاج في الوقت!');
+        showAudioSoundEffect('❌ انتهى الوقت ولم يتم إصلاح السابوتاج!');
       }
     });
   }
@@ -511,6 +792,7 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
   void dispose() {
     promptTimer?.cancel();
     sabotageTimer?.cancel();
+    taskTimer?.cancel();
     super.dispose();
   }
 
@@ -547,16 +829,18 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
             if (isSabotageActive) ...[
               Container(
                 padding: const EdgeInsets.all(12),
-                color: Colors.red.shade900,
+                decoration: BoxDecoration(color: Colors.red.shade900, borderRadius: BorderRadius.circular(12)),
                 child: Column(
                   children: [
-                    Text('🚨 سابوتاج في $sabotageRoom!', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text('باقي $sabotageTimerSeconds ثواني!', style: const TextStyle(fontSize: 20, color: Colors.yellowAccent)),
+                    Text('🚨 سابوتاج في $sabotageRoom!', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('باقي $sabotageTimerSeconds ثواني!', style: const TextStyle(fontSize: 22, color: Colors.yellowAccent, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 5),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black),
                       onPressed: () {
                         sabotageTimer?.cancel();
                         setState(() => isSabotageActive = false);
-                        playSoundNotification('تم إبطال السابوتاج بنجاح!');
+                        showAudioSoundEffect('🛡️ تم إبطال السابوتاج بنجاح!');
                       },
                       child: const Text('صلحت السابوتاج'),
                     )
@@ -569,11 +853,25 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: const Color(0xFF231145), borderRadius: BorderRadius.circular(12)),
-              child: Text(currentInstruction, style: const TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              child: Text(currentInstruction, style: const TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold, fontSize: 16), textAlign: TextAlign.center),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 15),
 
-            if (!isImposter)
+            if (!isImposter) ...[
+              // زر "أنت وصلت؟" لبدء العد التنازلي العشوائي لإنجاز المهمة
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isTaskActive ? Colors.grey : const Color(0xFFFB923C),
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                icon: const Icon(Icons.location_pin),
+                label: Text(
+                  isTaskActive ? 'جاري إنجاز المهمة... ($taskCountdownSeconds ثواني)' : 'أنت وصلت للأوضة؟ (ابدأ العد)',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                onPressed: isTaskActive ? null : () => startTaskCountdown(),
+              ),
+              const SizedBox(height: 15),
               Expanded(
                 child: ListView.builder(
                   itemCount: assignedTasks.length,
@@ -581,30 +879,29 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
                     color: const Color(0xFF231145),
                     child: ListTile(
                       title: Text(assignedTasks[idx]),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.check_circle, color: Colors.greenAccent),
-                        onPressed: () => setState(() => assignedTasks.removeAt(idx)),
-                      ),
+                      trailing: const Icon(Icons.bolt, color: Colors.amber),
                     ),
                   ),
                 ),
               ),
+            ],
 
             if (isImposter)
               Expanded(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('😈 اختر مكان السابوتاج:'),
-                    const SizedBox(height: 10),
+                    const Text('😈 اختر الغرفة لتنفيذ السابوتاج:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 15),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 10,
+                      runSpacing: 10,
                       children: List.generate(widget.roomCount, (index) {
                         String rName = 'غرفة ${index + 1}';
                         return ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6)),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
                           onPressed: () => startSabotage(rName),
-                          child: Text('سابوتاج $rName'),
+                          child: Text('سابوتاج $rName', style: const TextStyle(fontSize: 16)),
                         );
                       }),
                     ),
@@ -612,11 +909,12 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
                 ),
               ),
 
+            const SizedBox(height: 10),
             ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size.fromHeight(48)),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade800, minimumSize: const Size.fromHeight(48)),
               icon: const Icon(Icons.campaign),
-              label: const Text('Report / جثة'),
-              onPressed: () => playSoundNotification('يا دي النيلة! إيه اللي حصل؟'),
+              label: const Text('الإبلاغ عن جثة / Report'),
+              onPressed: () => showAudioSoundEffect('📢 [إبلاغ طارئ]: تم اكتشاف جثة في الممر! الاجتماع يبدأ الآن.'),
             )
           ],
         ),
