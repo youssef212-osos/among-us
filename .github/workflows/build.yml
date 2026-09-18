@@ -24,22 +24,11 @@ jobs:
         with:
           channel: 'stable'
 
-      # إنشاء تطبيق فلاتر نظيف بالكامل من الصفر لتفادي أي أخطاء في pubspec أو android
-      - name: Re-create Clean Flutter App
-        run: |
-          mkdir temp_app
-          cd temp_app
-          flutter create imposter_alive --org com.imposter.alive
-          cp -r imposter_alive/* ../
-          cd ..
-          rm -rf temp_app
-
-      # إعادة استبدال ملف main.dart بكود اللعبة الخاص بك
-      - name: Ensure Main Game Code
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Release APK
-        run: flutter build apk --release --no-tree-shake-icons
+      - name: Build Release APK from main.dart
+        run: flutter build apk --release -t lib/main.dart --no-tree-shake-icons
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
