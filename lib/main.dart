@@ -3,499 +3,410 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
-  runApp(const ImposterGameApp());
+  runApp(const BuzzyStyleImposterApp());
 }
 
-class ImposterGameApp extends StatelessWidget {
-  const ImposterGameApp({super.key});
+class BuzzyStyleImposterApp extends StatelessWidget {
+  const BuzzyStyleImposterApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Imposter Real-Life P2P',
+      title: 'Real Imposter',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF130A2A),
+        cardColor: const Color(0xFF221545),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.redAccent,
+          seedColor: const Color(0xFF8B5CF6),
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
       ),
-      home: const MainHomeScreen(),
+      home: const BuzzyHomeScreen(),
     );
   }
 }
 
-class MainHomeScreen extends StatefulWidget {
-  const MainHomeScreen({super.key});
+class BuzzyHomeScreen extends StatefulWidget {
+  const BuzzyHomeScreen({super.key});
 
   @override
-  State<MainHomeScreen> createState() => _MainHomeScreenState();
+  State<BuzzyHomeScreen> createState() => _BuzzyHomeScreenState();
 }
 
-class _MainHomeScreenState extends State<MainHomeScreen> {
-  final TextEditingController _nameController = TextEditingController(text: 'لاعب 1');
-  final TextEditingController _codeController = TextEditingController();
+class _BuzzyHomeScreenState extends State<BuzzyHomeScreen> {
+  String userName = "Youssef Aly";
+  String profilePicLetter = "Y";
+  final TextEditingController _codeJoinController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('🕵️ Imposter Real-Life'),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.security, size: 70, color: Colors.redAccent),
-              const SizedBox(height: 15),
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'اسم اللاعب',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
-                ),
-              ),
-              const SizedBox(height: 25),
-              // خيار انشاء روم
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                onPressed: () {
-                  if (_nameController.text.trim().isEmpty) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HostLobbyScreen(playerName: _nameController.text.trim()),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.add_box),
-                label: const Text('إنشاء غرفة (Host)', style: TextStyle(fontSize: 18)),
-              ),
-              const SizedBox(height: 15),
-              // خيار الـ Local
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                onPressed: () {
-                  if (_nameController.text.trim().isEmpty) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LocalDiscoveryScreen(playerName: _nameController.text.trim()),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.wifi_find),
-                label: const Text('البحث عن سيرفر محلي (Local)', style: TextStyle(fontSize: 18)),
-              ),
-              const SizedBox(height: 25),
-              const Divider(),
-              const SizedBox(height: 10),
-              // خيار الانضمام بكود مباشر
-              TextField(
-                controller: _codeController,
-                decoration: const InputDecoration(
-                  labelText: 'أدخل كود/IP الغرفة',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.qr_code),
-                ),
-              ),
-              const SizedBox(height: 15),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                onPressed: () {
-                  if (_nameController.text.trim().isEmpty || _codeController.text.trim().isEmpty) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ClientLobbyScreen(
-                        playerName: _nameController.text.trim(),
-                        hostIp: _codeController.text.trim(),
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.login),
-                label: const Text('انضمام بالكود', style: TextStyle(fontSize: 18)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ==================== شاشة البحث المحلي (Local) ====================
-class LocalDiscoveryScreen extends StatefulWidget {
-  final String playerName;
-  const LocalDiscoveryScreen({super.key, required this.playerName});
-
-  @override
-  State<LocalDiscoveryScreen> createState() => _LocalDiscoveryScreenState();
-}
-
-class _LocalDiscoveryScreenState extends State<LocalDiscoveryScreen> {
-  RawDatagramSocket? _udpSocket;
-  String? foundHostIp;
-  String status = "جاري البحث عن الهوست على نفس الشبكة...";
-
-  @override
-  void initState() {
-    super.initState();
-    _listenForBroadcast();
-  }
-
-  void _listenForBroadcast() async {
-    try {
-      _udpSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 8889);
-      _udpSocket?.broadcastEnabled = true;
-      _udpSocket?.listen((RawSocketEvent event) {
-        if (event == RawSocketEvent.read) {
-          Datagram? dg = _udpSocket?.receive();
-          if (dg != null) {
-            String message = utf8.decode(dg.data);
-            if (message.startsWith("IMPOSTER_HOST:")) {
-              setState(() {
-                foundHostIp = dg.address.address;
-                status = "تم العثور على غرفة الهوست!";
-              });
-            }
-          }
-        }
-      });
-    } catch (e) {
-      setState(() {
-        status = "خطأ أثناء البحث: $e";
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _udpSocket?.close();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('شبكة Local')),
-      body: Center(
+      body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (foundHostIp == null) ...[
-                const CircularProgressIndicator(),
-                const SizedBox(height: 20),
-                Text(status, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
-              ] else ...[
-                const Icon(Icons.check_circle, color: Colors.green, size: 80),
-                const SizedBox(height: 20),
-                Text('عُثر على الهوست: $foundHostIp', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 30),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size(double.infinity, 50)),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ClientLobbyScreen(
-                          playerName: widget.playerName,
-                          hostIp: foundHostIp!,
+              // الهيدر العلوي (الأكونت والنقاط)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Colors.green,
+                        child: Text(
+                          profilePicLetter,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('دخول الجيم الان 🚀', style: TextStyle(fontSize: 18)),
-                )
-              ]
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAlignment.start,
+                        children: [
+                          Text(
+                            userName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Row(
+                            children: [
+                              Icon(Icons.monetization_on, color: Colors.amber, size: 16),
+                              SizedBox(width: 4),
+                              Text("425", style: TextStyle(color: Colors.amber, fontSize: 13)),
+                            ],
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      _topIconButton(Icons.storefront, "المتجر"),
+                      const SizedBox(width: 8),
+                      _topIconButton(Icons.assignment, "المهام"),
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(height: 35),
+
+              // اللوجو الرئيسي اللطيف
+              const Text(
+                "REAL\nIMPOSTER",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 38,
+                  fontWeight: FontWeight.black,
+                  color: Color(0xFFFFB703),
+                  shadows: [
+                    Shadow(offset: Offset(0, 4), color: Colors.black80, blurRadius: 8),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // أزرار القائمة الرئيسية على طريقة باظي بارتي
+              _menuButton(
+                title: "إنشاء لعبة",
+                color: const Color(0xFF8B5CF6),
+                icon: Icons.gavel,
+                onTap: () {
+                  String newRoomCode = (Random().nextInt(899999) + 100000).toString();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RoomLobbyScreen(
+                        playerName: userName,
+                        roomCode: newRoomCode,
+                        isHost: true,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 14),
+
+              _menuButton(
+                title: "ادخل لعبة (الكود)",
+                color: const Color(0xFFFB8500),
+                icon: Icons.touch_app,
+                onTap: () => _showJoinCodeDialog(),
+              ),
+              const SizedBox(height: 14),
+
+              _menuButton(
+                title: "بحث محلي (Local)",
+                color: const Color(0xFF2A9D8F),
+                icon: Icons.wifi_find,
+                onTap: () {
+                  // دخول تلقائي للهوست القريب
+                },
+              ),
+
+              const Spacer(),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-// ==================== شاشة الهوست (Host) ====================
-class HostLobbyScreen extends StatefulWidget {
-  final String playerName;
-  const HostLobbyScreen({super.key, required this.playerName});
-
-  @override
-  State<HostLobbyScreen> createState() => _HostLobbyScreenState();
-}
-
-class _HostLobbyScreenState extends State<HostLobbyScreen> {
-  ServerSocket? _server;
-  Timer? _broadcastTimer;
-  List<Socket> clients = [];
-  List<String> players = [];
-  String roomCode = "جاري التحميل...";
-  bool gameStarted = false;
-  String myRole = "Crewmate (طاقم العمل)";
-
-  @override
-  void initState() {
-    super.initState();
-    players.add(widget.playerName);
-    _startServer();
+  Widget _topIconButton(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF221545),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.white70),
+          const SizedBox(width: 4),
+          Text(label, style: const TextStyle(fontSize: 11)),
+        ],
+      ),
+    );
   }
 
-  void _startServer() async {
-    try {
-      for (var interface in await NetworkInterface.list()) {
-        for (var addr in interface.addresses) {
-          if (addr.type == InternetAddressType.IPv4 && !addr.isLoopback) {
-            setState(() {
-              roomCode = addr.address;
-            });
-            break;
-          }
-        }
-      }
-
-      _server = await ServerSocket.bind(InternetAddress.anyIPv4, 4444);
-      _server?.listen((Socket client) {
-        clients.add(client);
-        client.listen((data) {
-          String message = utf8.decode(data);
-          var msgData = jsonDecode(message);
-          if (msgData['type'] == 'join') {
-            setState(() {
-              players.add(msgData['name']);
-            });
-            _broadcastPlayers();
-          }
-        });
-      });
-
-      // إرسال إشارة للـ Local كل ثانية لتعريف وجود السيرفر
-      RawDatagramSocket udp = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-      udp.broadcastEnabled = true;
-      _broadcastTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        udp.send(utf8.encode("IMPOSTER_HOST:$roomCode"), InternetAddress("255.255.255.255"), 8889);
-      });
-    } catch (e) {
-      setState(() {
-        roomCode = "خطأ: $e";
-      });
-    }
-  }
-
-  void _broadcastPlayers() {
-    var msg = jsonEncode({'type': 'players_update', 'players': players});
-    for (var c in clients) {
-      c.write(msg);
-    }
-  }
-
-  void _startGame() {
-    if (players.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يلزم وجود لاعبين على الأقل للبدء!')),
-      );
-      return;
-    }
-
-    int imposterIndex = Random().nextInt(players.length);
-    setState(() {
-      gameStarted = true;
-      myRole = (imposterIndex == 0) ? "🔪 Imposter (القاتل)" : "😇 Crewmate (طاقم العمل)";
-    });
-
-    for (int i = 0; i < clients.length; i++) {
-      String role = (i + 1 == imposterIndex) ? "🔪 Imposter (القاتل)" : "😇 Crewmate (طاقم العمل)";
-      clients[i].write(jsonEncode({'type': 'start_game', 'role': role}));
-    }
-  }
-
-  @override
-  void dispose() {
-    _broadcastTimer?.cancel();
-    _server?.close();
-    for (var c in clients) {
-      c.close();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('غرفة الهوست')),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
+  Widget _menuButton({required String title, required Color color, required IconData icon, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.4),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.redAccent),
-              ),
-              child: Column(
-                children: [
-                  const Text('كود الدخول المباشر للغرفة:', style: TextStyle(fontSize: 14)),
-                  const SizedBox(height: 5),
-                  SelectableText(
-                    roomCode,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.greenAccent),
-                  ),
-                ],
-              ),
+            CircleAvatar(
+              backgroundColor: Colors.white24,
+              child: Icon(icon, color: Colors.white),
             ),
-            const SizedBox(height: 20),
-            if (!gameStarted) ...[
-              Text('اللاعبون في الغرفة (${players.length}):', style: const TextStyle(fontSize: 18)),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: players.length,
-                  itemBuilder: (context, index) => ListTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(players[index]),
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size(double.infinity, 50)),
-                onPressed: _startGame,
-                child: const Text('بدء اللعبة وتوزيع الأدوار 🚀', style: TextStyle(fontSize: 18)),
-              )
-            ] else ...[
-              const SizedBox(height: 40),
-              const Text('دورك في اللعبة:', style: TextStyle(fontSize: 20)),
-              const SizedBox(height: 10),
-              Text(
-                myRole,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: myRole.contains('Imposter') ? Colors.red : Colors.blue,
-                ),
-              ),
-            ]
+            const SizedBox(width: 15),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const Spacer(),
+            const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.white70),
           ],
         ),
       ),
     );
   }
+
+  void _showJoinCodeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF221545),
+        title: const Text('ادخل كود اللعبة المكون من 6 أرقام', textAlign: TextAlign.center),
+        content: TextField(
+          controller: _codeJoinController,
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 24, letterSpacing: 4, color: Colors.amber),
+          decoration: const InputDecoration(
+            hintText: '469939',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (_codeJoinController.text.length == 6) {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RoomLobbyScreen(
+                      playerName: userName,
+                      roomCode: _codeJoinController.text,
+                      isHost: false,
+                    ),
+                  ),
+                );
+              }
+            },
+            child: const Text('انضمام', style: TextStyle(fontSize: 18, color: Colors.greenAccent)),
+          )
+        ],
+      ),
+    );
+  }
 }
 
-// ==================== شاشة العميل (Client) ====================
-class ClientLobbyScreen extends StatefulWidget {
+// ==================== واجهة الروم الشبيهة بـ باظي بارتي ====================
+class RoomLobbyScreen extends StatelessWidget {
   final String playerName;
-  final String hostIp;
-  const ClientLobbyScreen({super.key, required this.playerName, required this.hostIp});
+  final String roomCode;
+  final bool isHost;
 
-  @override
-  State<ClientLobbyScreen> createState() => _ClientLobbyScreenState();
-}
-
-class _ClientLobbyScreenState extends State<ClientLobbyScreen> {
-  Socket? _socket;
-  List<String> players = [];
-  bool gameStarted = false;
-  String myRole = "في انتظار بدء اللعبة...";
-  String statusMsg = "جاري الاتصال بالسيرفر...";
-
-  @override
-  void initState() {
-    super.initState();
-    _connectToHost();
-  }
-
-  void _connectToHost() async {
-    try {
-      _socket = await Socket.connect(widget.hostIp, 4444);
-      setState(() {
-        statusMsg = "تم الاتصال بنجاح!";
-      });
-
-      _socket?.write(jsonEncode({'type': 'join', 'name': widget.playerName}));
-
-      _socket?.listen((data) {
-        String message = utf8.decode(data);
-        var msgData = jsonDecode(message);
-
-        if (msgData['type'] == 'players_update') {
-          setState(() {
-            players = List<String>.from(msgData['players']);
-          });
-        } else if (msgData['type'] == 'start_game') {
-          setState(() {
-            gameStarted = true;
-            myRole = msgData['role'];
-          });
-        }
-      });
-    } catch (e) {
-      setState(() {
-        statusMsg = "فشل الاتصال: $e";
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _socket?.close();
-    super.dispose();
-  }
+  const RoomLobbyScreen({
+    super.key,
+    required this.playerName,
+    required this.roomCode,
+    required this.isHost,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('الانضمام للغرفة')),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('كيفية اللعب'),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Text(statusMsg, style: const TextStyle(fontSize: 16, color: Colors.amber)),
-            const SizedBox(height: 20),
-            if (!gameStarted) ...[
-              Text('اللاعبون المنضمون (${players.length}):', style: const TextStyle(fontSize: 18)),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: players.length,
-                  itemBuilder: (context, index) => ListTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(players[index]),
+            // كارت نوع الجيم العلوي
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF221545),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: Colors.amber.withOpacity(0.5)),
+              ),
+              child: const Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(Icons.sports_esports, color: Colors.amber),
                   ),
-                ),
+                  SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAlignment.start,
+                    children: [
+                      Text('على مزاج الحكم', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('مهام حقيقية بالبيت واجتماعات طارئة', style: TextStyle(fontSize: 12, color: Colors.white60)),
+                    ],
+                  )
+                ],
               ),
-            ] else ...[
-              const SizedBox(height: 40),
-              const Text('دورك في اللعبة:', style: TextStyle(fontSize: 20)),
-              const SizedBox(height: 10),
-              Text(
-                myRole,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: myRole.contains('Imposter') ? Colors.red : Colors.blue,
-                ),
+            ),
+            const SizedBox(height: 20),
+
+            // كود اللعبة
+            const Text('كود اللعبة', style: TextStyle(fontSize: 16, color: Colors.white70)),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1B0E3B),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: const Color(0xFFFB8500), width: 2),
               ),
-            ]
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    roomCode,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFFB8500),
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  IconButton(
+                    icon: const Icon(Icons.copy, color: Colors.amber),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: roomCode));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('تم نسخ كود اللعبة!')),
+                      );
+                    },
+                  )
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+
+            // زرار دعوة الأصدقاء
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFB8500),
+                minimumSize: const Size(double.infinity, 45),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {},
+              icon: const Icon(Icons.person_add),
+              label: const Text('دعوة الأصدقاء', style: TextStyle(fontSize: 16)),
+            ),
+            const SizedBox(height: 20),
+
+            // بطاقات اللاعبين المنضمين
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF221545),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: Colors.green,
+                    child: Text('Y', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(playerName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          if (isHost) const Icon(Icons.star, color: Colors.amber, size: 16),
+                        ],
+                      ),
+                      Text(isHost ? "أنت صاحب الجيم" : "لاعب منضم", style: const TextStyle(fontSize: 12, color: Colors.white54)),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            const Spacer(),
+
+            // زرار بدء الجيم
+            if (isHost)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('بدأت اللعبة وتوزيع الأدوار! 🚀')),
+                  );
+                },
+                child: const Text('بدء اللعبة 🚀', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              )
           ],
         ),
       ),
