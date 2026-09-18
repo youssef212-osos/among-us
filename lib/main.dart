@@ -15,7 +15,7 @@ class BuzzyAmongUsApp extends StatelessWidget {
       title: 'Buzzy Party: Imposter Alive',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF130924), // الخلفية الكحلي الغامق
+        scaffoldBackgroundColor: const Color(0xFF130924),
         primaryColor: const Color(0xFF8B5CF6),
       ),
       home: const BuzzyHomeScreen(),
@@ -34,7 +34,6 @@ class BuzzyHomeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
           child: Column(
             children: [
-              // الهيدر علوي
               Row(
                 children: [
                   const CircleAvatar(
@@ -54,14 +53,13 @@ class BuzzyHomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // اللوجو الجديد المعدل (Buzzy Party: Imposter Alive)
               Column(
                 children: [
                   Text(
                     'BUZZY PARTY',
                     style: TextStyle(
                       fontSize: 32,
-                      fontWeight: FontWeight.black,
+                      fontWeight: FontWeight.w900,
                       color: const Color(0xFFFACC15),
                       shadows: [
                         Shadow(offset: const Offset(2, 2), color: Colors.black.withOpacity(0.8), blurRadius: 2),
@@ -73,8 +71,8 @@ class BuzzyHomeScreen extends StatelessWidget {
                     'IMPOSTER ALIVE',
                     style: TextStyle(
                       fontSize: 26,
-                      fontWeight: FontWeight.black,
-                      color: const Color(0xFFEF4444), // لون أحمر مميز للأجواء الحماسية
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFFEF4444),
                       shadows: [
                         Shadow(offset: const Offset(2, 2), color: Colors.black.withOpacity(0.8), blurRadius: 2),
                       ],
@@ -84,7 +82,6 @@ class BuzzyHomeScreen extends StatelessWidget {
               ),
               const Spacer(),
 
-              // أزرار Buzzy Party الشهيرة
               _buildBuzzyButton(
                 title: 'إنشاء لعبة لوكال',
                 color: const Color(0xFF8B5CF6),
@@ -169,8 +166,6 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     TextEditingController(text: 'لاعب 2'),
   ];
   int roomsCount = 2; 
-  int selectedTaskTime = 10;
-  int hostIndex = 0;
 
   int getCalculatedImposters() {
     int total = playerControllers.length;
@@ -285,7 +280,6 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     builder: (context) => MainGameRoomScreen(
                       playerNames: names,
                       roomCount: roomsCount,
-                      hostIndex: hostIndex,
                       imposterIndices: imposters,
                     ),
                   ),
@@ -303,14 +297,12 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
 class MainGameRoomScreen extends StatefulWidget {
   final List<String> playerNames;
   final int roomCount;
-  final int hostIndex;
   final List<int> imposterIndices;
 
   const MainGameRoomScreen({
     super.key,
     required this.playerNames,
     required this.roomCount,
-    required this.hostIndex,
     required this.imposterIndices,
   });
 
