@@ -1,33 +1,45 @@
-name: imposter_alive
-description: "A fun multiplayer imposter party game."
-publish_to: 'none'
+name: Build Flutter APK
 
-version: 1.0.0+1
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-environment:
-  sdk: '>=3.0.0 <4.0.0'
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-dependencies:
-  flutter:
-    sdk: flutter
-  cupertino_icons: ^1.0.6
+    steps:
+      # 1. جلب الكود من المستودع
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^3.0.0
-  flutter_launcher_icons: ^0.13.1
+      # 2. إعداد بيئة Java المعتمدة لـ Flutter
+      - name: Set up Java Development Kit (JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-# إعدادات أيقونة التطبيق (App Icon)
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/images/app_icon.png"
-  min_sdk_android: 21
+      # 3. إعداد بيئة Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
 
-flutter:
-  uses-material-design: true
+      # 4. جلب المكتبات (Pub Get)
+      - name: Install dependencies
+        run: flutter pub get
 
-  # مسار الصورة لاستخدامها داخل التطبيق
-  assets:
-    - assets/images/app_icon.png
+      # 5. بناء تطبيق APK (Release)
+      - name: Build APK
+        run: flutter build apk --release
+
+      # 6. رفع الـ APK المستخرج لتقوم بتحميله مباشرة من GitHub
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
