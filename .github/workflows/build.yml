@@ -29,19 +29,23 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # 4. إعادة إنشاء إعدادات منصة الأندرويد تلقائياً لتجنب أي ملفات مفقودة
+      # 4. تنظيف وحذف أي ملفات أندرويد معطوبة قديمة قبل البناء
+      - name: Clean old android files if any
+        run: rm -rf android
+
+      # 5. إعادة توليد مجلد الأندرويد نقي وسليم 100%
       - name: Re-create Android platform files
         run: flutter create . --platforms=android --org=com.imposter.alive
 
-      # 5. تحميل المكتبات والـ Dependencies
+      # 6. تحميل المكتبات
       - name: Install dependencies
         run: flutter pub get
 
-      # 6. بناء ملف الـ APK
+      # 7. بناء الـ APK
       - name: Build APK
         run: flutter build apk --release
 
-      # 7. رفع الـ APK المكتمل كـ Artifact للتحميل
+      # 8. رفع الـ APK المكتمل
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
