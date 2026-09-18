@@ -24,12 +24,19 @@ jobs:
         with:
           channel: 'stable'
 
+      # 1. إنشاء ملفات منصة الأندرويد المفقودة فقط دون مسح ملفات الكود
+      - name: Generate Android Folder
+        run: flutter create . --platforms=android --org com.imposter.alive
+
+      # 2. تحميل المكتبات
       - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Release APK from main.dart
+      # 3. بناء الـ APK مباشرة من ملف اللعبة الأصلي
+      - name: Build Release APK
         run: flutter build apk --release -t lib/main.dart --no-tree-shake-icons
 
+      # 4. رفع ملف اللعبة الجاهز
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
