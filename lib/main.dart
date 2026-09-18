@@ -1,156 +1,237 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 void main() {
-  runApp(const BuzzyStyleImposterApp());
+  runApp(const RealImposterApp());
 }
 
-class BuzzyStyleImposterApp extends StatelessWidget {
-  const BuzzyStyleImposterApp({super.key});
+class RealImposterApp extends StatelessWidget {
+  const RealImposterApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Real Imposter',
+      title: 'Real Imposter EG',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF130A2A),
-        cardColor: const Color(0xFF221545),
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        cardColor: const Color(0xFF1E293B),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF8B5CF6),
+          seedColor: const Color(0xFF10B981),
           brightness: Brightness.dark,
         ),
       ),
-      home: const BuzzyHomeScreen(),
+      home: const HomeScreen(),
     );
   }
 }
 
-class BuzzyHomeScreen extends StatefulWidget {
-  const BuzzyHomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<BuzzyHomeScreen> createState() => _BuzzyHomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _BuzzyHomeScreenState extends State<BuzzyHomeScreen> {
+class _HomeScreenState extends State<HomeScreen> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  GoogleSignInAccount? _currentUser;
+
   String userName = "Youssef Aly";
-  String profilePicLetter = "Y";
+  String? userPhotoUrl;
   final TextEditingController _codeJoinController = TextEditingController();
+
+  final List<String> quotes = [
+    "🔥 أنا جيت.. أنا جيت!",
+    "⚽ باصي بارتي يا معلم!",
+    "🦀 مين اللي بلع الكابوريا؟",
+    "👀 فيه واحد امبوستر بينّا هنا!",
+    "🚨 يا لهوييييي!"
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) {
+      setState(() {
+        _currentUser = account;
+        if (account != null) {
+          userName = account.displayName ?? "Youssef Aly";
+          userPhotoUrl = account.photoUrl;
+        }
+      });
+    });
+    _googleSignIn.signInSilently();
+  }
+
+  Future<void> _handleSignIn() async {
+    try {
+      await _googleSignIn.signIn();
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل تسجيل الدخول: $error')),
+      );
+    }
+  }
+
+  Future<void> _handleSignOut() => _googleSignIn.disconnect();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              // الهيدر العلوي (الأكونت والنقاط)
+              // الهيدر الحديث مع زرار Google Sign In
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: Colors.green,
-                        child: Text(
-                          profilePicLetter,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                  GestureDetector(
+                    onTap: _currentUser == null ? _handleSignIn : _handleSignOut,
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: const Color(0xFF10B981),
+                          backgroundImage: userPhotoUrl != null ? NetworkImage(userPhotoUrl!) : null,
+                          child: userPhotoUrl == null
+                              ? Text(
+                                  userName.isNotEmpty ? userName[0].toUpperCase() : "Y",
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                                )
+                              : null,
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAlignment.start,
+                          children: [
+                            Text(userName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                            Text(
+                              _currentUser != null ? "مُسجل بحساب Google" : "اضغط للتسجيل بجوجل 🔑",
+                              style: TextStyle(
+                                color: _currentUser != null ? Colors.greenAccent : Colors.amber,
+                                fontSize: 11,
+                              ),
                             ),
-                          ),
-                          const Row(
-                            children: [
-                              Icon(Icons.monetization_on, color: Colors.amber, size: 16),
-                              SizedBox(width: 4),
-                              Text("425", style: TextStyle(color: Colors.amber, fontSize: 13)),
-                            ],
-                          )
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  Row(
-                    children: [
-                      _topIconButton(Icons.storefront, "المتجر"),
-                      const SizedBox(width: 8),
-                      _topIconButton(Icons.assignment, "المهام"),
-                    ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(20)),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.bolt, color: Colors.amber, size: 18),
+                        SizedBox(width: 4),
+                        Text("100%", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
                   )
                 ],
               ),
-              const SizedBox(height: 35),
+              const SizedBox(height: 20),
 
-              // اللوجو الرئيسي اللطيف
-              const Text(
-                "REAL\nIMPOSTER",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 38,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFFFFB703),
-                  shadows: [
-                    Shadow(offset: Offset(0, 4), color: Colors.black, blurRadius: 8),
-                  ],
+              // شريط إفيهات متحرك عشوائي
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF334155),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  (quotes..shuffle()).first,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
 
               const Spacer(),
 
-              // أزرار القائمة الرئيسية على طريقة باظي بارتي
-              _menuButton(
-                title: "إنشاء لعبة",
-                color: const Color(0xFF8B5CF6),
-                icon: Icons.gavel,
+              // اللوجو الرئيسي
+              const Column(
+                children: [
+                  Icon(Icons.radar, size: 70, color: Color(0xFF10B981)),
+                  SizedBox(height: 10),
+                  Text(
+                    "REAL IMPOSTER",
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
+                  ),
+                  Text("النسخة المصرية Real-Life", style: TextStyle(color: Colors.white54, fontSize: 13)),
+                ],
+              ),
+
+              const Spacer(),
+
+              // زر تسجيل دخول جوجل بارز لو مش مسجل
+              if (_currentUser == null) ...[
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    side: const BorderSide(color: Colors.white70),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                  onPressed: _handleSignIn,
+                  icon: const Icon(Icons.login, color: Colors.white),
+                  label: const Text("تسجيل الدخول بواسطة Google", style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // أزرار القائمة
+              _customButton(
+                title: "إنشاء روم جديدة 🚀",
+                color: const Color(0xFF10B981),
+                icon: Icons.add_circle_outline,
                 onTap: () {
-                  String newRoomCode = (Random().nextInt(899999) + 100000).toString();
+                  String newCode = (Random().nextInt(899999) + 100000).toString();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => RoomLobbyScreen(
+                      builder: (context) => RoomScreen(
                         playerName: userName,
-                        roomCode: newRoomCode,
+                        photoUrl: userPhotoUrl,
+                        roomCode: newCode,
                         isHost: true,
                       ),
                     ),
                   );
                 },
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
-              _menuButton(
-                title: "ادخل لعبة (الكود)",
-                color: const Color(0xFFFB8500),
-                icon: Icons.touch_app,
-                onTap: () => _showJoinCodeDialog(),
+              _customButton(
+                title: "دخول بكود الغرفة 🔑",
+                color: const Color(0xFF3B82F6),
+                icon: Icons.key,
+                onTap: () => _showJoinDialog(),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
-              _menuButton(
-                title: "بحث محلي (Local)",
-                color: const Color(0xFF2A9D8F),
-                icon: Icons.wifi_find,
-                onTap: () {},
+              _customButton(
+                title: "بحث عن روم قريبة (Local Wi-Fi) 📡",
+                color: const Color(0xFF8B5CF6),
+                icon: Icons.wifi,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RoomScreen(
+                        playerName: userName,
+                        photoUrl: userPhotoUrl,
+                        roomCode: "LOCAL-NET",
+                        isHost: false,
+                      ),
+                    ),
+                  );
+                },
               ),
 
               const Spacer(),
@@ -161,86 +242,50 @@ class _BuzzyHomeScreenState extends State<BuzzyHomeScreen> {
     );
   }
 
-  Widget _topIconButton(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFF221545),
-        borderRadius: BorderRadius.circular(10),
+  Widget _customButton({required String title, required Color color, required IconData icon, required VoidCallback onTap}) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        minimumSize: const Size(double.infinity, 55),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 4,
       ),
+      onPressed: onTap,
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18, color: Colors.white70),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 11)),
+          Icon(icon, color: Colors.white),
+          const SizedBox(width: 10),
+          Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
         ],
       ),
     );
   }
 
-  Widget _menuButton({required String title, required Color color, required IconData icon, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        height: 60,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.4),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: Colors.white24,
-              child: Icon(icon, color: Colors.white),
-            ),
-            const SizedBox(width: 15),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const Spacer(),
-            const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.white70),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showJoinCodeDialog() {
+  void _showJoinDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF221545),
-        title: const Text('ادخل كود اللعبة المكون من 6 أرقام', textAlign: TextAlign.center),
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('ادخل كود الروم', textAlign: TextAlign.center),
         content: TextField(
           controller: _codeJoinController,
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 24, letterSpacing: 4, color: Colors.amber),
-          decoration: const InputDecoration(
-            hintText: '469939',
-            border: OutlineInputBorder(),
-          ),
+          style: const TextStyle(fontSize: 26, letterSpacing: 3, color: Color(0xFF10B981)),
+          decoration: const InputDecoration(hintText: '981228', border: OutlineInputBorder()),
         ),
         actions: [
           TextButton(
             onPressed: () {
-              if (_codeJoinController.text.length == 6) {
+              if (_codeJoinController.text.isNotEmpty) {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => RoomLobbyScreen(
+                    builder: (context) => RoomScreen(
                       playerName: userName,
+                      photoUrl: userPhotoUrl,
                       roomCode: _codeJoinController.text,
                       isHost: false,
                     ),
@@ -256,145 +301,144 @@ class _BuzzyHomeScreenState extends State<BuzzyHomeScreen> {
   }
 }
 
-// ==================== واجهة الروم الشبيهة بـ باظي بارتي ====================
-class RoomLobbyScreen extends StatelessWidget {
+// ==================== شاشة الروم ====================
+class RoomScreen extends StatefulWidget {
   final String playerName;
+  final String? photoUrl;
   final String roomCode;
   final bool isHost;
 
-  const RoomLobbyScreen({
+  const RoomScreen({
     super.key,
     required this.playerName,
+    this.photoUrl,
     required this.roomCode,
     required this.isHost,
   });
 
   @override
+  State<RoomScreen> createState() => _RoomScreenState();
+}
+
+class _RoomScreenState extends State<RoomScreen> {
+  final List<String> soundEffects = [
+    "🔥 أنا جيت.. أنا جيت!",
+    "⚽ باصي بارتي!",
+    "🦀 مين بلع الكابوريا؟",
+    "🏃‍♂️ اخلع يا جدع!",
+    "😱 يا لهوييييي!"
+  ];
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('كيفية اللعب'),
+        title: const Text('غرفة الانتظار'),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF221545),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.amber.withOpacity(0.5)),
-              ),
-              child: const Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
-                    child: Icon(Icons.sports_esports, color: Colors.amber),
-                  ),
-                  SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('على مزاج الحكم', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text('مهام حقيقية بالبيت واجتماعات طارئة', style: TextStyle(fontSize: 12, color: Colors.white60)),
-                    ],
-                  )
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text('كود اللعبة', style: TextStyle(fontSize: 16, color: Colors.white70)),
-            const SizedBox(height: 8),
+            // كارت الكود
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1B0E3B),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: const Color(0xFFFB8500), width: 2),
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF10B981), width: 2),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Column(
                 children: [
-                  Text(
-                    roomCode,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFFB8500),
-                      letterSpacing: 2,
-                    ),
+                  const Text('كود الغرفة الخاص بك', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  const SizedBox(height: 5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        widget.roomCode,
+                        style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
+                      ),
+                      const SizedBox(width: 10),
+                      IconButton(
+                        icon: const Icon(Icons.copy, color: Colors.amber),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: widget.roomCode));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم نسخ كود الروم!')));
+                        },
+                      )
+                    ],
                   ),
-                  const SizedBox(width: 15),
-                  IconButton(
-                    icon: const Icon(Icons.copy, color: Colors.amber),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: roomCode));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('تم نسخ كود اللعبة!')),
-                      );
-                    },
-                  )
                 ],
               ),
             ),
             const SizedBox(height: 15),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFB8500),
-                minimumSize: const Size(double.infinity, 45),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {},
-              icon: const Icon(Icons.person_add),
-              label: const Text('دعوة الأصدقاء', style: TextStyle(fontSize: 16)),
-            ),
-            const SizedBox(height: 20),
+
+            // قائمة اللعيبة
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF221545),
-                borderRadius: BorderRadius.circular(15),
-              ),
+              decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(12)),
               child: Row(
                 children: [
-                  const CircleAvatar(
-                    backgroundColor: Colors.green,
-                    child: Text('Y', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                  CircleAvatar(
+                    backgroundColor: const Color(0xFF10B981),
+                    backgroundImage: widget.photoUrl != null ? NetworkImage(widget.photoUrl!) : null,
+                    child: widget.photoUrl == null
+                        ? Text(
+                            widget.playerName.isNotEmpty ? widget.playerName[0].toUpperCase() : "Y",
+                            style: const TextStyle(color: Colors.white),
+                          )
+                        : null,
                   ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(playerName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          if (isHost) const Icon(Icons.star, color: Colors.amber, size: 16),
-                        ],
-                      ),
-                      Text(isHost ? "أنت صاحب الجيم" : "لاعب منضم", style: const TextStyle(fontSize: 12, color: Colors.white54)),
-                    ],
-                  )
+                  const SizedBox(width: 10),
+                  Text(widget.playerName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  if (widget.isHost) ...[
+                    const SizedBox(width: 6),
+                    const Icon(Icons.star, color: Colors.amber, size: 18),
+                    const Text(" (صاحب الروم)", style: TextStyle(color: Colors.amber, fontSize: 12))
+                  ]
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // لوحة الإفيهات
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text('🎭 بنك الإفيهات (اضغط لإرسال صوت):', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: soundEffects.map((quote) {
+                return ActionChip(
+                  backgroundColor: const Color(0xFF334155),
+                  label: Text(quote, style: const TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('📣 $quote'), duration: const Duration(seconds: 1)),
+                    );
+                  },
+                );
+              }).toList(),
+            ),
+
             const Spacer(),
-            if (isHost)
+
+            if (widget.isHost)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: const Color(0xFF10B981),
                   minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('بدأت اللعبة وتوزيع الأدوار! 🚀')),
-                  );
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('بدأت اللعبة وتوزيع المهام! 🚀')));
                 },
-                child: const Text('بدء اللعبة 🚀', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                child: const Text('بدء اللعبة 🚀', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               )
           ],
         ),
