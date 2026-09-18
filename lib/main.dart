@@ -3,374 +3,327 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const ImposterAliveApp());
+  runApp(const AmongUsPartyApp());
 }
 
-class ImposterAliveApp extends StatelessWidget {
-  const ImposterAliveApp({super.key});
+class AmongUsPartyApp extends StatelessWidget {
+  const AmongUsPartyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Imposter Alive',
+      title: 'Among Us Party',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0F172A),
       ),
-      home: const MainMenuScreen(),
+      home: const RoleSelectionScreen(),
     );
   }
 }
 
-class MainMenuScreen extends StatelessWidget {
-  const MainMenuScreen({super.key});
+class RoleSelectionScreen extends StatefulWidget {
+  const RoleSelectionScreen({super.key});
+
+  @override
+  State<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
+}
+
+class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
+  final TextEditingController nameController = TextEditingController();
+  bool isHost = false;
+  String role = 'Crewmate'; // Crewmate or Imposter
+
+  void showSoundNotification(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('🔊 الصوت: "$text"', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.redAccent,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'IMPOSTER ALIVE',
-                style: TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.redAccent,
-                  letterSpacing: 4,
-                  shadows: [
-                    Shadow(color: Colors.black, offset: Offset(2, 2), blurRadius: 4),
-                  ],
+      appBar: AppBar(title: const Text('إعدادات اللاعب')),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'اسمك في اللعبة', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Text('هل أنت الـ Host (منظم اللعبة)؟'),
+                Switch(
+                  value: isHost,
+                  onChanged: (val) => setState(() => isHost = val),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'البقاء على قيد الحياة وإتمام المهام!',
-                style: TextStyle(fontSize: 16, color: Colors.blueGrey, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 60),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ],
+            ),
+            Row(
+              children: [
+                const Text('دورك: '),
+                DropdownButton<String>(
+                  value: role,
+                  items: ['Crewmate', 'Imposter'].map((String value) {
+                    return DropdownMenuItem<String>(value: value, child: Text(value));
+                  }).toList(),
+                  onChanged: (val) => setState(() => role = val!),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const GameScreen()),
-                  );
-                },
-                child: const Text(
-                  'ابدأ اللعب الآن',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            const Spacer(),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+              onPressed: () {
+                if (nameController.text.isEmpty) return;
+                showSoundNotification('أنا جيت!');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GamePartyScreen(
+                      playerName: nameController.text,
+                      isHost: isHost,
+                      isImposter: role == 'Imposter',
+                    ),
+                  ),
+                );
+              },
+              child: const Text('دخول الروم', style: TextStyle(fontSize: 20)),
+            )
+          ],
         ),
       ),
     );
   }
 }
 
-class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+class GamePartyScreen extends StatefulWidget {
+  final String playerName;
+  final bool isHost;
+  final bool isImposter;
+
+  const GamePartyScreen({
+    super.key,
+    required this.playerName,
+    required this.isHost,
+    required this.isImposter,
+  });
 
   @override
-  State<GameScreen> createState() => _GameScreenState();
+  State<GamePartyScreen> createState() => _GamePartyScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
-  double playerX = 150;
-  double playerY = 300;
-  final double playerSize = 25;
-  final double speed = 6;
+class _GamePartyScreenState extends State<GamePartyScreen> {
+  String currentTask = 'اضغط "تاسك جديد" لبدء مهمتك!';
+  bool isTaskRunning = false;
+  int taskProgress = 0;
+  Timer? taskTimer;
 
-  List<Point<double>> imposters = [
-    const Point(50.0, 50.0),
-    const Point(500.0, 100.0),
-    const Point(200.0, 600.0),
-  ];
-  final double imposterSpeed = 2.0;
+  final List<String> rooms = ['الشرقية', 'الغربية', 'الصالون', 'المطبخ', 'الريسبشن'];
+  final List<String> taskTypes = ['صلح السلك', 'امسح البصمات', 'نزل الملفات', 'شغل المولد'];
 
-  List<Point<double>> tasks = [
-    const Point(100.0, 150.0),
-    const Point(450.0, 200.0),
-    const Point(300.0, 500.0),
-  ];
-  List<bool> completedTasks = [false, false, false];
+  void generateNewTask() {
+    final random = Random();
+    String selectedRoom = rooms[random.nextInt(rooms.length)];
+    String selectedTask = taskTypes[random.nextInt(taskTypes.length)];
+    int taskDuration = random.nextInt(10) + 1; // من 1 لـ 10 ثواني
 
-  Timer? gameTimer;
-  bool isGameOver = false;
-  bool isVictory = false;
-
-  final double mapWidth = 600;
-  final double mapHeight = 800;
-
-  @override
-  void initState() {
-    super.initState();
-    startGameLoop();
+    setState(() {
+      currentTask = 'روح $selectedRoom وإعمل: $selectedTask (المدة: $taskDuration ثواني)';
+    });
   }
 
-  void startGameLoop() {
-    gameTimer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
-      if (isGameOver || isVictory) return;
+  void startTaskTimer() {
+    setState(() {
+      isTaskRunning = true;
+      taskProgress = 0;
+    });
 
+    taskTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        for (int i = 0; i < imposters.length; i++) {
-          double dx = playerX - imposters[i].x;
-          double dy = playerY - imposters[i].y;
-          double distance = sqrt(dx * dx + dy * dy);
-
-          if (distance > 0) {
-            imposters[i] = Point(
-              imposters[i].x + (dx / distance) * imposterSpeed,
-              imposters[i].y + (dy / distance) * imposterSpeed,
-            );
-          }
-
-          if (distance < playerSize) {
-            isGameOver = true;
-          }
-        }
-
-        for (int i = 0; i < tasks.length; i++) {
-          if (!completedTasks[i]) {
-            double tDx = playerX - tasks[i].x;
-            double tDy = playerY - tasks[i].y;
-            double tDistance = sqrt(tDx * tDx + tDy * tDy);
-
-            if (tDistance < 30) {
-              completedTasks[i] = true;
-            }
-          }
-        }
-
-        if (completedTasks.every((task) => task == true)) {
-          isVictory = true;
+        taskProgress += 10;
+        if (taskProgress >= 100) {
+          timer.cancel();
+          isTaskRunning = false;
+          currentTask = 'تمت المهمة بنجاح! خذ مهمة جديدة.';
         }
       });
     });
   }
 
-  @override
-  void dispose() {
-    gameTimer?.cancel();
-    super.dispose();
+  void playVoice(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('🔊 $text', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.amber.shade900,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
-  void movePlayer(double dx, double dy) {
-    if (isGameOver || isVictory) return;
-    setState(() {
-      playerX = (playerX + dx * speed).clamp(playerSize, mapWidth - playerSize);
-      playerY = (playerY + dy * speed).clamp(playerSize, mapHeight - playerSize);
-    });
+  void triggerEmergencyMeeting() {
+    playVoice('يا دي النيلة! إيه اللي حصل؟');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('🚨 اجتماااع طارئ! 🚨'),
+        content: const Text('في حد داس على الميتينج أو لقى جثة! اتجمعوا واتناقشوا.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              playVoice('يا دي النيلة... طلع بريء!');
+            },
+            child: const Text('طردنا واحد بريء'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (widget.isImposter) {
+                playVoice('يا لوزر يا لوزر!');
+              } else {
+                playVoice('وكسبناااا وكسبناااا!');
+              }
+            },
+            child: const Text('كشفنا الإمبوستر!'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                movePlayer(details.delta.dx.sign, details.delta.dy.sign);
-              },
-              child: CustomPaint(
-                painter: GamePainter(
-                  playerX: playerX,
-                  playerY: playerY,
-                  playerSize: playerSize,
-                  imposters: imposters,
-                  tasks: tasks,
-                  completedTasks: completedTasks,
-                  mapWidth: mapWidth,
-                  mapHeight: mapHeight,
-                ),
-              ),
-            ),
-          ),
-
-          Positioned(
-            top: 40,
-            left: 20,
-            right: 20,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blueAccent),
-                  ),
-                  child: Text(
-                    'المهام المنجزة: ${completedTasks.where((t) => t).length} / ${tasks.length}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.pop(context),
-                )
-              ],
-            ),
-          ),
-
-          Positioned(
-            bottom: 40,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Column(
-                children: [
-                  IconButton(
-                    onPressed: () => movePlayer(0, -1),
-                    icon: const Icon(Icons.arrow_upward, size: 50, color: Colors.white70),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () => movePlayer(-1, 0),
-                        icon: const Icon(Icons.arrow_back, size: 50, color: Colors.white70),
-                      ),
-                      const SizedBox(width: 40),
-                      IconButton(
-                        onPressed: () => movePlayer(1, 0),
-                        icon: const Icon(Icons.arrow_forward, size: 50, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    onPressed: () => movePlayer(0, 1),
-                    icon: const Icon(Icons.arrow_downward, size: 50, color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          if (isGameOver || isVictory)
-            Container(
-              color: Colors.black.withOpacity(0.9),
-              child: Center(
-                child: Column(
+      appBar: AppBar(
+        title: Text('${widget.playerName} (${widget.isImposter ? 'Imposter' : 'Crewmate'})'),
+        backgroundColor: widget.isImposter ? Colors.red.shade900 : Colors.blue.shade900,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // لو كان Host هيظهر زرار إضافي للـ Meeting Room
+            if (widget.isHost) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                color: Colors.amber.shade800,
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      isVictory ? 'لقد انتصرت! 🎉' : 'قتلك الخائن! 💀',
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: isVictory ? Colors.greenAccent : Colors.redAccent,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      isVictory ? 'أكملت جميع المهام بنجاح وبقيت حياً!' : 'لقد قضى عليك الـ Imposter!',
-                      style: const TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                    const SizedBox(height: 40),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          playerX = 150;
-                          playerY = 300;
-                          imposters = [
-                            const Point(50.0, 50.0),
-                            const Point(500.0, 100.0),
-                            const Point(200.0, 600.0),
-                          ];
-                          completedTasks = [false, false, false];
-                          isGameOver = false;
-                          isVictory = false;
-                        });
-                      },
-                      child: const Text('إعادة المحاولة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
+                    Icon(Icons.star),
+                    SizedBox(width: 8),
+                    Text('أنت الـ HOST: عندك زرار الميتينج روم', style: TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, minimumSize: const Size.fromHeight(50)),
+                icon: const Icon(Icons.warning, color: Colors.white),
+                label: const Text('EMERGENCY MEETING (الهوست)', style: TextStyle(fontSize: 18, color: Colors.white)),
+                onPressed: triggerEmergencyMeeting,
+              ),
+              const Divider(height: 30),
+            ],
+
+            // لو كان Crewmate (مهام العشوائية)
+            if (!widget.isImposter) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text(currentTask, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                      const SizedBox(height: 15),
+                      if (isTaskRunning) LinearProgressIndicator(value: taskProgress / 100),
+                      const SizedBox(height: 15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(onPressed: generateNewTask, child: const Text('تاسك جديد')),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                            onPressed: isTaskRunning ? null : startTaskTimer,
+                            child: const Text('ابدأ تنفيذ التاسك'),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            // لو كان Imposter (تاسكات وهمية + سابوتاج + قتل)
+            if (widget.isImposter) ...[
+              Card(
+                color: Colors.red.shade950,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      const Text('😈 خيارات الـ Imposter', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red)),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                        onPressed: () => playVoice('عملت سابوتاج! الأبواب اتقفلت والنور قطع!'),
+                        child: const Text('تفعيل سابوتاج (Sabotage)'),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.darkRed),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              TextEditingController victimController = TextEditingController();
+                              return AlertDialog(
+                                title: const Text('قتل شخص في الحقيقة'),
+                                content: TextField(
+                                  controller: victimController,
+                                  decoration: const InputDecoration(hintText: 'اكتب اسم الشخص اللي لمسته'),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      playVoice('قتلت ${victimController.text}! ينزل على الأرض فوراً!');
+                                    },
+                                    child: const Text('تأكيد القتل 💀'),
+                                  )
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: const Text('قتل لاعب (لما تلمسه)'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            const Spacer(),
+
+            // زرار إبلاغ عن جثة لأي حد يلاقي واحد مقتول
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size.fromHeight(50)),
+              icon: const Icon(Icons.campaign),
+              label: const Text('لقيت جثة! (Report)', style: TextStyle(fontSize: 18)),
+              onPressed: triggerEmergencyMeeting,
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
-}
-
-class GamePainter extends CustomPainter {
-  final double playerX;
-  final double playerY;
-  final double playerSize;
-  final List<Point<double>> imposters;
-  final List<Point<double>> tasks;
-  final List<bool> completedTasks;
-  final double mapWidth;
-  final double mapHeight;
-
-  GamePainter({
-    required this.playerX,
-    required this.playerY,
-    required this.playerSize,
-    required this.imposters,
-    required this.tasks,
-    required this.completedTasks,
-    required this.mapWidth,
-    required this.mapHeight,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final bgPaint = Paint()..color = const Color(0xFF0F1728);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    final gridPaint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
-      ..style = PaintingStyle.stroke;
-    for (double i = 0; i < size.width; i += 40) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), gridPaint);
-    }
-    for (double i = 0; i < size.height; i += 40) {
-      canvas.drawLine(Offset(0, i), Offset(size.width, i), gridPaint);
-    }
-
-    for (int i = 0; i < tasks.length; i++) {
-      final taskPaint = Paint()
-        ..color = completedTasks[i] ? Colors.greenAccent : Colors.yellowAccent
-        ..style = PaintingStyle.fill;
-      
-      canvas.drawCircle(Offset(tasks[i].x, tasks[i].y), 15, taskPaint);
-      
-      final iconPaint = Paint()..color = Colors.black..style = PaintingStyle.stroke..strokeWidth = 2;
-      canvas.drawRect(Rect.fromCircle(center: Offset(tasks[i].x, tasks[i].y), radius: 6), iconPaint);
-    }
-
-    final playerPaint = Paint()..color = Colors.cyan;
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(playerX, playerY), width: playerSize * 1.2, height: playerSize * 1.5), const Radius.circular(10)), playerPaint);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(playerX - playerSize * 0.8, playerY - playerSize * 0.5, playerSize * 0.3, playerSize * 1), const Radius.circular(4)), Paint()..color = Colors.cyan.shade700);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(playerX - playerSize * 0.1, playerY - playerSize * 0.5, playerSize * 0.6, playerSize * 0.4), const Radius.circular(6)), Paint()..color = Colors.white70);
-
-    for (var imposter in imposters) {
-      final imposterPaint = Paint()..color = Colors.redAccent;
-      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(imposter.x, imposter.y), width: playerSize * 1.2, height: playerSize * 1.5), const Radius.circular(10)), imposterPaint);
-      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(imposter.x - playerSize * 0.8, imposter.y - playerSize * 0.5, playerSize * 0.3, playerSize * 1), const Radius.circular(4)), Paint()..color = Colors.red.shade900);
-      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(imposter.x - playerSize * 0.1, imposter.y - playerSize * 0.5, playerSize * 0.6, playerSize * 0.4), const Radius.circular(6)), Paint()..color = Colors.lightBlueAccent);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
