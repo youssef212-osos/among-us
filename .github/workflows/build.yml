@@ -1,38 +1,33 @@
-name: Build Android APK and Windows EXE
+name: imposter_alive
+description: "A fun multiplayer imposter party game."
+publish_to: 'none'
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+version: 1.0.0+1
 
-jobs:
-  build-android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-      - run: flutter create . --platforms=android
-      - run: yes | flutter doctor --android-licenses || true
-      - run: flutter pub get
-      - run: flutter build apk --debug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: android-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+environment:
+  sdk: '>=3.0.0 <4.0.0'
 
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-      - run: flutter create . --platforms=windows
-      - run: flutter pub get
-      - run: flutter build windows
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-exe
-          path: build/windows/runner/Release/
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+
+# إعدادات أيقونة التطبيق (App Icon)
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+
+flutter:
+  uses-material-design: true
+
+  # مسار الصورة لاستخدامها داخل التطبيق
+  assets:
+    - assets/images/app_icon.png
