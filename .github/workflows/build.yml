@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
@@ -24,71 +24,24 @@ jobs:
         with:
           channel: 'stable'
 
-      # تنظيف وحذف مجلد الأندرويد القديم إن وجد لتجنب أي تعارض
-      - name: Clean Old Android Files
-        run: rm -rf android
+      # إنشاء تطبيق فلاتر نظيف بالكامل من الصفر لتفادي أي أخطاء في pubspec أو android
+      - name: Re-create Clean Flutter App
+        run: |
+          mkdir temp_app
+          cd temp_app
+          flutter create imposter_alive --org com.imposter.alive
+          cp -r imposter_alive/* ../
+          cd ..
+          rm -rf temp_app
 
-      # إعادة إنشاء منصة الأندرويد ناعمة ونظيفة
-      - name: Re-create Android Platform
-        run: flutter create . --platforms=android --org=com.imposter.alive
-
-      # جلب المكتبات
-      - name: Get Dependencies
+      # إعادة استبدال ملف main.dart بكود اللعبة الخاص بك
+      - name: Ensure Main Game Code
         run: flutter pub get
 
-      # بناء ملف الـ APK
       - name: Build Release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
 
-      # رفع الملف النهائي ليكون جاهزاً للتحميل
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Imposter-Alive-APK
-          path: build/app/outputs/flutter-apk/app-release.apkname: Build Flutter APK
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      # تنظيف وحذف مجلد الأندرويد القديم إن وجد لتجنب أي تعارض
-      - name: Clean Old Android Files
-        run: rm -rf android
-
-      # إعادة إنشاء منصة الأندرويد ناعمة ونظيفة
-      - name: Re-create Android Platform
-        run: flutter create . --platforms=android --org=com.imposter.alive
-
-      # جلب المكتبات
-      - name: Get Dependencies
-        run: flutter pub get
-
-      # بناء ملف الـ APK
-      - name: Build Release APK
-        run: flutter build apk --release
-
-      # رفع الملف النهائي ليكون جاهزاً للتحميل
-      - name: Upload APK Artifact
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: Imposter-Alive-APK
