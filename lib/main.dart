@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart0:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
@@ -32,7 +32,7 @@ class RoleSelectionScreen extends StatefulWidget {
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   final TextEditingController nameController = TextEditingController();
   bool isHost = false;
-  String role = 'Crewmate'; // Crewmate or Imposter
+  String role = 'Crewmate';
 
   void showSoundNotification(String text) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -210,7 +210,6 @@ class _GamePartyScreenState extends State<GamePartyScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // لو كان Host هيظهر زرار إضافي للـ Meeting Room
             if (widget.isHost) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -234,7 +233,6 @@ class _GamePartyScreenState extends State<GamePartyScreen> {
               const Divider(height: 30),
             ],
 
-            // لو كان Crewmate (مهام العشوائية)
             if (!widget.isImposter) ...[
               Card(
                 child: Padding(
@@ -262,10 +260,9 @@ class _GamePartyScreenState extends State<GamePartyScreen> {
               ),
             ],
 
-            // لو كان Imposter (تاسكات وهمية + سابوتاج + قتل)
             if (widget.isImposter) ...[
               Card(
-                color: Colors.red.shade950,
+                color: const Color(0xFF2C0B0B),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -279,7 +276,7 @@ class _GamePartyScreenState extends State<GamePartyScreen> {
                       ),
                       const SizedBox(height: 10),
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.darkRed),
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B0000)),
                         onPressed: () {
                           showDialog(
                             context: context,
@@ -314,7 +311,6 @@ class _GamePartyScreenState extends State<GamePartyScreen> {
 
             const Spacer(),
 
-            // زرار إبلاغ عن جثة لأي حد يلاقي واحد مقتول
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size.fromHeight(50)),
               icon: const Icon(Icons.campaign),
