@@ -70,7 +70,7 @@ class _BuzzyHomeScreenState extends State<BuzzyHomeScreen> {
                       ),
                       const SizedBox(width: 10),
                       Column(
-                        crossAxisAlignment: CrossAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             userName,
@@ -107,10 +107,10 @@ class _BuzzyHomeScreenState extends State<BuzzyHomeScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 38,
-                  fontWeight: FontWeight.black,
+                  fontWeight: FontWeight.w900,
                   color: Color(0xFFFFB703),
                   shadows: [
-                    Shadow(offset: Offset(0, 4), color: Colors.black80, blurRadius: 8),
+                    Shadow(offset: Offset(0, 4), color: Colors.black, blurRadius: 8),
                   ],
                 ),
               ),
@@ -150,9 +150,7 @@ class _BuzzyHomeScreenState extends State<BuzzyHomeScreen> {
                 title: "بحث محلي (Local)",
                 color: const Color(0xFF2A9D8F),
                 icon: Icons.wifi_find,
-                onTap: () {
-                  // دخول تلقائي للهوست القريب
-                },
+                onTap: () {},
               ),
 
               const Spacer(),
@@ -283,7 +281,6 @@ class RoomLobbyScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            // كارت نوع الجيم العلوي
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -299,7 +296,7 @@ class RoomLobbyScreen extends StatelessWidget {
                   ),
                   SizedBox(width: 12),
                   Column(
-                    crossAxisAlignment: CrossAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('على مزاج الحكم', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       Text('مهام حقيقية بالبيت واجتماعات طارئة', style: TextStyle(fontSize: 12, color: Colors.white60)),
@@ -309,8 +306,6 @@ class RoomLobbyScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-
-            // كود اللعبة
             const Text('كود اللعبة', style: TextStyle(fontSize: 16, color: Colors.white70)),
             const SizedBox(height: 8),
             Container(
@@ -347,8 +342,6 @@ class RoomLobbyScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-
-            // زرار دعوة الأصدقاء
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFB8500),
@@ -360,8 +353,6 @@ class RoomLobbyScreen extends StatelessWidget {
               label: const Text('دعوة الأصدقاء', style: TextStyle(fontSize: 16)),
             ),
             const SizedBox(height: 20),
-
-            // بطاقات اللاعبين المنضمين
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -376,7 +367,7 @@ class RoomLobbyScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Column(
-                    crossAxisAlignment: CrossAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
@@ -391,8 +382,6 @@ class RoomLobbyScreen extends StatelessWidget {
               ),
             ),
             const Spacer(),
-
-            // زرار بدء الجيم
             if (isHost)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
