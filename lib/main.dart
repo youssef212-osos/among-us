@@ -108,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 10),
                         Column(
-                          crossAxisAlignment: CrossAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(userName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                             Text(
