@@ -1,4 +1,4 @@
-import 'dart0:async';
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
@@ -133,7 +133,7 @@ class _GamePartyScreenState extends State<GamePartyScreen> {
     final random = Random();
     String selectedRoom = rooms[random.nextInt(rooms.length)];
     String selectedTask = taskTypes[random.nextInt(taskTypes.length)];
-    int taskDuration = random.nextInt(10) + 1; // من 1 لـ 10 ثواني
+    int taskDuration = random.nextInt(10) + 1;
 
     setState(() {
       currentTask = 'روح $selectedRoom وإعمل: $selectedTask (المدة: $taskDuration ثواني)';
