@@ -1,116 +1,21 @@
-import 'package:flutter/material.dart';
+name: Build APK
 
-void main() {
-  runApp(const BuzzyApp());
-}
+on:
+  push:
+    branches: [ main, master ]
 
-class BuzzyApp extends StatelessWidget {
-  const BuzzyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF130924),
-      ),
-      home: const ProfileScreen(),
-    );
-  }
-}
-
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  final TextEditingController nameController = TextEditingController();
-  int selectedIndex = 0;
-
-  final List<String> avatars = [
-    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_1.png',
-    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_2.png',
-    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_3.png',
-    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_4.png',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'اختر شخصيتك واسمك',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFFACC15)),
-                  ),
-                  const SizedBox(height: 20),
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: const Color(0xFF231145),
-                    backgroundImage: NetworkImage(avatars[selectedIndex]),
-                  ),
-                  const SizedBox(height: 15),
-                  SizedBox(
-                    height: 60,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      itemCount: avatars.length,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () => setState(() => selectedIndex = index),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 5),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: selectedIndex == index ? Colors.white : Colors.transparent,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: CircleAvatar(
-                              backgroundImage: NetworkImage(avatars[index]),
-                              radius: 22,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: 'أدخل اسمك',
-                      filled: true,
-                      fillColor: const Color(0xFF231145),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B5CF6),
-                      minimumSize: const Size.fromHeight(50),
-                    ),
-                    onPressed: () {},
-                    child: const Text('دخول للعبة 🚀', style: TextStyle(fontSize: 18)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
