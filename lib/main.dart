@@ -69,7 +69,6 @@ class _BuzzyAmongUsAppState extends State<BuzzyAmongUsApp> {
   }
 }
 
-// شاشة إعداد الملف الشخصي (مضبوطة تماماً في المنتصف بدون مساحات رمادية)
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -97,11 +96,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -110,36 +109,41 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   isArabic ? 'اختر شخصيتك واسمك' : 'Choose Your Avatar & Name',
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFFFACC15)),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(color: Color(0xFF231145), shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF231145), 
+                    shape: BoxShape.circle,
+                  ),
                   child: CircleAvatar(
-                    radius: 40,
+                    radius: 42,
                     backgroundColor: Colors.transparent,
                     backgroundImage: NetworkImage(avatars[selectedAvatarIndex]),
                   ),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
 
                 SizedBox(
-                  height: 70,
+                  height: 65,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     shrinkWrap: true,
-                    physics: const BouncingScrollPhysics(),
                     itemCount: avatars.length,
                     itemBuilder: (context, index) {
                       return GestureDetector(
                         onTap: () => setState(() => selectedAvatarIndex = index),
                         child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 5),
-                          padding: const EdgeInsets.all(3),
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: selectedAvatarIndex == index ? const Color(0xFF8B5CF6) : const Color(0xFF1E0C3B),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: selectedAvatarIndex == index ? Colors.white : Colors.transparent, width: 2),
+                            border: Border.all(
+                              color: selectedAvatarIndex == index ? Colors.white : Colors.transparent, 
+                              width: 2,
+                            ),
                           ),
                           child: CircleAvatar(
                             backgroundImage: NetworkImage(avatars[index]),
@@ -150,7 +154,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 24),
 
                 TextField(
                   controller: nameController,
@@ -158,10 +162,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     labelText: isArabic ? 'أدخل اسمك (مثال: يوسف)' : 'Enter your name (e.g. Youssef)',
                     filled: true,
                     fillColor: const Color(0xFF231145),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 24),
 
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -186,7 +193,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       );
                     }
                   },
-                  child: Text(isArabic ? 'دخول للعبة 🚀' : 'Enter Game 🚀', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    isArabic ? 'دخول للعبة 🚀' : 'Enter Game 🚀', 
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
