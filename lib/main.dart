@@ -266,7 +266,6 @@ class MainMenuScreen extends StatelessWidget {
 class RoomSetupScreen extends StatefulWidget {
   final String playerName;
   final String avatarUrl;
-  fn: () => {};
   final bool isEnglish;
 
   const RoomSetupScreen({
