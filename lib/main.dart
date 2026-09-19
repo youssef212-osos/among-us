@@ -1,11 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Router; // تم إخفاء Router لمنع التداخل
 import 'package:bonsoir/bonsoir.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 void main() {
   runApp(const BuzzyApp());
@@ -39,7 +39,7 @@ class _BuzzyAppState extends State<BuzzyApp> {
   }
 }
 
-// 1. شاشة اختيار الأفاتار والاسم الحقيقي
+// 1. شاشة اختيار الأفاتار والاسم
 class ProfileScreen extends StatefulWidget {
   final Function() onToggleLanguage;
   final bool isEnglish;
@@ -132,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
-                      labelText: widget.isEnglish ? 'Enter your actual name' : 'أدخل اسمك الحقيقي (مثال: يوسف، أحمد...)',
+                      labelText: widget.isEnglish ? 'Enter your actual name' : 'أدخل اسمك الحقيقي',
                       filled: true,
                       fillColor: const Color(0xFF231145),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -243,7 +243,7 @@ class MainMenuScreen extends StatelessWidget {
               },
               icon: const Icon(Icons.wifi_tethering, color: Colors.white),
               label: Text(
-                isEnglish ? 'Join Local Room (Scanner)' : 'البحث والانضمام لغرفة محلية',
+                isEnglish ? 'Join Local Room' : 'البحث والانضمام لغرفة محلية',
                 style: const TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
@@ -340,7 +340,7 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
   }
 }
 
-// 4. واجهة المضيف الحقيقية (بث الشبكة + تشغيل سيرفر محلي)
+// 4. واجهة المضيف (السيرفر المحلي)
 class HostWaitingRoom extends StatefulWidget {
   final String playerName;
   final String avatarUrl;
@@ -415,7 +415,7 @@ class _HostWaitingRoomState extends State<HostWaitingRoom> {
       await _broadcast!.start();
       setState(() => isServerStarted = true);
     } catch (e) {
-      print('Error starting server: $e');
+      debugPrint('Error starting server: $e');
     }
   }
 
@@ -468,7 +468,7 @@ class _HostWaitingRoomState extends State<HostWaitingRoom> {
   }
 }
 
-// 5. واجهة البحث والانضمام الحقيقية
+// 5. واجهة البحث والانضمام
 class LocalLobbyScreen extends StatefulWidget {
   final String playerName;
   final String avatarUrl;
@@ -497,17 +497,22 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
     await _discovery!.ready;
 
     _discovery!.eventStream!.listen((event) {
+      if (event.service == null) return;
+
       if (event.type == BonsoirDiscoveryEventType.discoveryServiceFound) {
-        event.service.resolve(_discovery!.serviceResolver);
+        event.service!.resolve(_discovery!.serviceResolver);
       } else if (event.type == BonsoirDiscoveryEventType.discoveryServiceResolved) {
-        setState(() {
-          if (!foundRooms.any((r) => r.name == event.service.name)) {
-            foundRooms.add(event.service as ResolvedBonsoirService);
-          }
-        });
+        final service = event.service;
+        if (service is ResolvedBonsoirService) {
+          setState(() {
+            if (!foundRooms.any((r) => r.name == service.name)) {
+              foundRooms.add(service);
+            }
+          });
+        }
       } else if (event.type == BonsoirDiscoveryEventType.discoveryServiceLost) {
         setState(() {
-          foundRooms.removeWhere((r) => r.name == event.service.name);
+          foundRooms.removeWhere((r) => r.name == event.service!.name);
         });
       }
     });
@@ -517,11 +522,12 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
 
   Future<void> _joinRoom(ResolvedBonsoirService room) async {
     try {
-      String url = 'http://${room.ip}:${room.port}/join?name=${Uri.encodeComponent(widget.playerName)}&avatar=${Uri.encodeComponent(widget.avatarUrl)}';
+      String url = 'http://${room.host}:${room.port}/join?name=${Uri.encodeComponent(widget.playerName)}&avatar=${Uri.encodeComponent(widget.avatarUrl)}';
       var response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
+        if (!mounted) return;
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -535,6 +541,7 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('فشل الاتصال بالغرفة: $e')),
       );
@@ -568,7 +575,7 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
               child: foundRooms.isEmpty
                   ? Center(
                       child: Text(
-                        widget.isEnglish ? 'No rooms found yet. Make sure your friend created a room on the same hotspot!' : 'مفيش غرف لقتها لغاية دلوقتي.. تأكد إن صاحبك فتح غرفة على نفس شبكة الواي فاي أو الهوت سبوت!',
+                        widget.isEnglish ? 'No rooms found yet.' : 'مفيش غرف لقتها لغاية دلوقتي.. تأكد إن صاحبك فتح غرفة على نفس الشبكة!',
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Colors.white54),
                       ),
@@ -582,7 +589,7 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
                           child: ListTile(
                             leading: const Icon(Icons.meeting_room, color: Color(0xFFFACC15), size: 35),
                             title: Text(room.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            subtitle: Text('IP: ${room.ip}:${room.port}', style: const TextStyle(color: Colors.white60)),
+                            subtitle: Text('IP: ${room.host}:${room.port}', style: const TextStyle(color: Colors.white60)),
                             trailing: ElevatedButton(
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                               onPressed: () => _joinRoom(room),
@@ -600,7 +607,7 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
   }
 }
 
-// 6. لوبي العميل بعد الانضمام الناجح
+// 6. واجهة العميل بعد الانضمام
 class ClientWaitingRoom extends StatelessWidget {
   final String playerName;
   final String avatarUrl;
