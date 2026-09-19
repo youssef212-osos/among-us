@@ -30,11 +30,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController nameController = TextEditingController();
   int selectedIndex = 0;
 
+  // زودناهم وبقوا 10 أڤاتارات شكلهم تحفة ومتنوعين
   final List<String> avatars = [
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_1.png',
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_2.png',
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_3.png',
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_4.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_5.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_6.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_7.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_8.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_9.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_10.png',
   ];
 
   @override
@@ -65,6 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     backgroundImage: NetworkImage(avatars[selectedIndex]),
                   ),
                   const SizedBox(height: 15),
+                  // قائمة الأڤاتارات الـ 10 بشكل أفقي سلس
                   SizedBox(
                     height: 60,
                     child: ListView.builder(
@@ -78,8 +86,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             margin: const EdgeInsets.symmetric(horizontal: 5),
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: selectedIndex == index ? Colors.white : Colors.transparent,
-                                width: 2,
+                                color: selectedIndex == index ? Colors.yellowAccent : Colors.transparent,
+                                width: 3,
                               ),
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -103,6 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // زرار منور وفعال دائماً، لو نسى الاسم هيديله اسم افتراضي عشان يدخل علطول وما يعلقش
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5CF6),
@@ -111,9 +120,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () {
                       String name = nameController.text.trim();
                       if (name.isEmpty) {
-                        name = 'لاعب مجهول';
+                        name = 'بطل Buzzy';
                       }
-                      
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -126,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                     child: const Text(
                       'دخول للعبة 🚀',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
+                      style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
