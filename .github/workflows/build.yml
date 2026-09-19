@@ -1,44 +1,116 @@
-name: Build Flutter APK
+import 'package:flutter/material.dart';
 
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
+void main() {
+  runApp(const BuzzyApp());
+}
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+class BuzzyApp extends StatelessWidget {
+  const BuzzyApp({super.key});
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF130924),
+      ),
+      home: const ProfileScreen(),
+    );
+  }
+}
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
 
-      # 1. إنشاء ملفات منصة الأندرويد المفقودة فقط دون مسح ملفات الكود
-      - name: Generate Android Folder
-        run: flutter create . --platforms=android --org com.imposter.alive
+class _ProfileScreenState extends State<ProfileScreen> {
+  final TextEditingController nameController = TextEditingController();
+  int selectedIndex = 0;
 
-      # 2. تحميل المكتبات
-      - name: Get Dependencies
-        run: flutter pub get
+  final List<String> avatars = [
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_1.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_2.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_3.png',
+    'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_4.png',
+  ];
 
-      # 3. بناء الـ APK مباشرة من ملف اللعبة الأصلي
-      - name: Build Release APK
-        run: flutter build apk --release -t lib/main.dart --no-tree-shake-icons
-
-      # 4. رفع ملف اللعبة الجاهز
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Imposter-Alive-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'اختر شخصيتك واسمك',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFFACC15)),
+                  ),
+                  const SizedBox(height: 20),
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: const Color(0xFF231145),
+                    backgroundImage: NetworkImage(avatars[selectedIndex]),
+                  ),
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    height: 60,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      shrinkWrap: true,
+                      itemCount: avatars.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () => setState(() => selectedIndex = index),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: selectedIndex == index ? Colors.white : Colors.transparent,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: CircleAvatar(
+                              backgroundImage: NetworkImage(avatars[index]),
+                              radius: 22,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'أدخل اسمك',
+                      filled: true,
+                      fillColor: const Color(0xFF231145),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      minimumSize: const Size.fromHeight(50),
+                    ),
+                    onPressed: () {},
+                    child: const Text('دخول للعبة 🚀', style: TextStyle(fontSize: 18)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
