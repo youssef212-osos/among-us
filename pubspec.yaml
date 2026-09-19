@@ -1,26 +1,7 @@
-name: among_us_offline
-description: "A new Flutter project for Imposter Real-Life Offline."
-publish_to: 'none'
-
-version: 1.0.0+1
-
-environment:
-  sdk: ^3.5.0
-
 dependencies:
   flutter:
     sdk: flutter
-
-  # مكتبات الشبكة والكاميرا والـ QR وتسجيل جوجل
-  network_info_plus: ^6.0.0
-  mobile_scanner: ^5.0.0
-  qr_flutter: ^4.1.0
-  google_sign_in: ^6.2.1
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^4.0.0
-
-flutter:
-  uses-material-design: true
+  bonsoir: ^5.0.0      # لاكتشاف الأجهزة على الشبكة المحلية
+  shelf: ^1.4.1        # لعمل سيرفر خفيف جداً جوه الموبايل للمضيف
+  shelf_router: ^1.1.4 # لتنظيم طلبات السيرفر
+  http: ^1.2.0         # لإرسال الطلبات بين اللاعبين
