@@ -23,10 +23,10 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenSectionState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenSectionState extends State<ProfileScreen> {
   final TextEditingController nameController = TextEditingController();
   int selectedIndex = 0;
 
