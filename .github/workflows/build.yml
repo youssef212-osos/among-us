@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Buzzy Party APK
 
 on:
   push:
@@ -9,18 +9,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.x'
           channel: 'stable'
-      
-      # الخطوة دي هي اللي بتعوض ملف الـ android المفقود وتنشئه أوتوماتيك
-      - name: Create Android directory if missing
+
+      - name: Generate Android files if missing
         run: flutter create . --platforms=android --org com.buzzy.party
-        
+
       - run: flutter pub get
-      - run: flutter build apk --release
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
       - uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: buzzy-party-apk
           path: build/app/outputs/flutter-apk/app-release.apk
