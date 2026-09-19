@@ -24,7 +24,6 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # إجبار فلاتر على استخدام اسم مسموح به وتحديث ملفات الأندرويد
       - name: Repair Android V2 Embedding
         run: flutter create --platforms=android --project-name=among_us .
 
@@ -33,3 +32,10 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release
+
+      # --- الخطوة السحرية اللي هتظهرلك الـ APK للتحميل ---
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
