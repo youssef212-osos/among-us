@@ -208,7 +208,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 }
 
 class BuzzyHomeScreen extends StatelessWidget {
-  finalString username;
+  final String username;
   final String avatarUrl;
 
   const BuzzyHomeScreen({super.key, required this.username, required this.avatarUrl});
