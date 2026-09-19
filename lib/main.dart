@@ -102,7 +102,7 @@ class _BuzzyAmongUsAppState extends State<BuzzyAmongUsApp> {
   }
 }
 
-// شاشة اختيار الاسم والأفاتارات الاحترافية
+// شاشة اختيار الاسم والأفاتارات الاحترافية (مضبوطة الـ Layout تماماً)
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -111,10 +111,9 @@ class ProfileSetupScreen extends StatefulWidget {
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  final TextEditingController nameController = TextEditingController(text: ''); // تركها فارغة تماماً
+  final TextEditingController nameController = TextEditingController(text: ''); 
   int selectedAvatarIndex = 0;
 
-  // أفاتارات ألعاب موبايل احترافية وجاهزة
   final List<String> avatars = [
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_1.png',
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_2.png',
@@ -128,15 +127,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ترجمة مؤقتة سريعة حسب اللغة الحالية
     bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -149,29 +147,30 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ),
                 ],
               ),
-              const Spacer(),
+              const SizedBox(height: 10),
               Text(
                 isArabic ? 'اختر شخصيتك واسمك' : 'Choose Your Avatar & Name',
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFFFACC15)),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
               
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: const BoxDecoration(color: Color(0xFF231145), shape: BoxShape.circle),
                 child: CircleAvatar(
-                  radius: 40,
+                  radius: 45,
                   backgroundColor: Colors.transparent,
                   backgroundImage: NetworkImage(avatars[selectedAvatarIndex]),
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
 
-              // شبكة اختيار الأفاتارات الاحترافية
+              // شبكة اختيار الأفاتارات بمقاسات محددة وسليمة 100%
               SizedBox(
-                height: 70,
+                height: 75,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
                   itemCount: avatars.length,
                   itemBuilder: (context, index) {
                     return GestureDetector(
@@ -186,14 +185,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         ),
                         child: CircleAvatar(
                           backgroundImage: NetworkImage(avatars[index]),
-                          radius: 25,
+                          radius: 26,
                         ),
                       ),
                     );
                   },
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
               TextField(
                 controller: nameController,
@@ -231,7 +230,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 },
                 child: Text(isArabic ? 'دخول للعبة 🚀' : 'Enter Game 🚀', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
-              const Spacer(),
             ],
           ),
         ),
@@ -240,7 +238,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 }
 
-// شاشة الإعدادات لتغيير اللغة وتعديل البروفايل
+// شاشة الإعدادات لتغيير اللغة
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -484,7 +482,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   }
 }
 
-// شاشة البحث عن الأجهزة (مبدئياً تبدأ بيك أنت فقط بدون أسماء وهمية)
+// شاشة البحث عن الأجهزة
 class LocalRoomSearchScreen extends StatefulWidget {
   final String username;
   final String avatarUrl;
@@ -503,7 +501,6 @@ class _LocalRoomSearchScreenState extends State<LocalRoomSearchScreen> {
   @override
   void initState() {
     super.initState();
-    // تبدأ القائمة بك أنت فقط (الهوست) بدون أي أسماء غريبة
     connectedPlayers.add({'name': widget.username, 'avatar': widget.avatarUrl});
 
     Timer(const Duration(seconds: 3), () {
@@ -580,7 +577,7 @@ class _LocalRoomSearchScreenState extends State<LocalRoomSearchScreen> {
   }
 }
 
-// شاشة عجلة الحظ لاختيار الأدوار (Imposter / Crewmate)
+// شاشة عجلة الحظ لاختيار الأدوار
 class RoleWheelScreen extends StatefulWidget {
   final List<String> playerNames;
   final int roomCount;
@@ -608,13 +605,11 @@ class _RoleWheelScreenState extends State<RoleWheelScreen> {
       if (mounted) {
         setState(() {
           isSpinning = false;
-          // اختيار عشوائي للإمبوستر
           int impIndex = random.nextInt(widget.playerNames.length);
           imposterIndices = [impIndex];
           assignedRoleText = 'تم تحديد الأدوار بنجاح!';
         });
 
-        // الانتقال تلقائياً للجيم بعد عرض الدور بـ ثانيتين
         Timer(const Duration(seconds: 2), () {
           if (mounted) {
             Navigator.pushReplacement(
@@ -686,7 +681,6 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
   int sabotageTimerSeconds = 10;
   Timer? sabotageTimer;
 
-  // متغيرات مخصصة للعد التنازلي للمهام عند الأوضة
   bool isTaskActive = false;
   int taskCountdownSeconds = 0;
   Timer? taskTimer;
@@ -727,7 +721,6 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
     });
   }
 
-  // تنبيه بصري وصوتي واضح يظهر أعلى الشاشة كـ Sound Effect مرئي
   void showAudioSoundEffect(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -738,10 +731,9 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
     );
   }
 
-  // بدء العد التنازلي العشوائي للمهمة عند الضغط على "أنت وصلت؟" (من 3 لـ 10 ثواني)
   void startTaskCountdown() {
     final random = Random();
-    int randomSeconds = random.nextInt(8) + 3; // عدد عشوائي من 3 إلى 10 ثواني
+    int randomSeconds = random.nextInt(8) + 3;
 
     setState(() {
       isTaskActive = true;
@@ -759,7 +751,7 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
         setState(() {
           isTaskActive = false;
           if (assignedTasks.isNotEmpty) {
-            assignedTasks.removeAt(0); // إتمام المهمة الحالية
+            assignedTasks.removeAt(0);
           }
         });
         showAudioSoundEffect('✅ تم إنجاز المهمة بنجاح يا بطل!');
@@ -858,7 +850,6 @@ class _MainGameRoomScreenState extends State<MainGameRoomScreen> {
             const SizedBox(height: 15),
 
             if (!isImposter) ...[
-              // زر "أنت وصلت؟" لبدء العد التنازلي العشوائي لإنجاز المهمة
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isTaskActive ? Colors.grey : const Color(0xFFFB923C),
