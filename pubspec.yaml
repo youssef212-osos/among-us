@@ -1,7 +1,23 @@
+name: buzzy_party
+description: A real local multiplayer game.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
 dependencies:
   flutter:
     sdk: flutter
-  bonsoir: ^5.0.0      # لاكتشاف الأجهزة على الشبكة المحلية
-  shelf: ^1.4.1        # لعمل سيرفر خفيف جداً جوه الموبايل للمضيف
-  shelf_router: ^1.1.4 # لتنظيم طلبات السيرفر
-  http: ^1.2.0         # لإرسال الطلبات بين اللاعبين
+  bonsoir: ^5.0.0
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  http: ^1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
