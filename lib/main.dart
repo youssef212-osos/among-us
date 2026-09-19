@@ -32,7 +32,7 @@ class _BuzzyAppState extends State<BuzzyApp> {
   }
 }
 
-// 1. شاشة اختيار الأفاتار والاسم
+// 1. شاشة اختيار الأفاتار والاسم واللغة
 class ProfileScreen extends StatefulWidget {
   final Function() onToggleLanguage;
   final bool isEnglish;
@@ -47,7 +47,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController nameController = TextEditingController();
   int selectedIndex = 0;
 
-  // 10 أڤاتارات حقيقية وشغالة 100%
   final List<String> avatars = [
     'https://api.dicebear.com/7.x/bottts/png?seed=buzzy1',
     'https://api.dicebear.com/7.x/bottts/png?seed=buzzy2',
@@ -77,7 +76,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             icon: const Icon(Icons.settings, color: Color(0xFFFACC15)),
             onPressed: () {
-              // زر الإعدادات لتغيير اللغة
               widget.onToggleLanguage();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -158,7 +156,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         name = widget.isEnglish ? 'Unknown Player' : 'لاعب مجهول';
                       }
 
-                      // الانتقال لقائمة الخيارين (إنشاء / لعب لوكال)
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -185,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// 2. القائمة الرئيسية (إنشاء لعبة أو لعب لوكال)
+// 2. القائمة الرئيسية (إنشاء غرفة / لعب لوكال)
 class MainMenuScreen extends StatelessWidget {
   final String playerName;
   final String avatarUrl;
@@ -209,20 +206,19 @@ class MainMenuScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Text(playerName, style: const TextStyle(fontSize: 18, color: Color(0xFFFACC15))),
             const SizedBox(height: 40),
+            // الاختيار الأول: إنشاء غرفة
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green.shade700,
                 minimumSize: const Size.fromHeight(60),
               ),
               onPressed: () {
-                // الانتقال لصفحة إعدادات الأوض وتفاصيل الشقة
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => RoomSetupScreen(
                       playerName: playerName,
                       avatarUrl: avatarUrl,
-                      isHost: true,
                       isEnglish: isEnglish,
                     ),
                   ),
@@ -230,18 +226,18 @@ class MainMenuScreen extends StatelessWidget {
               },
               icon: const Icon(Icons.add_circle, color: Colors.white),
               label: Text(
-                isEnglish ? 'Create Game (Host)' : 'إنشاء لعبة (Host)',
+                isEnglish ? 'Create Room (Host)' : 'إنشاء غرفة',
                 style: const TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
             const SizedBox(height: 20),
+            // الاختيار الثاني: لعب لوكال مالتيبلاير (بدون نت / هوت سبوت)
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade700,
                 minimumSize: const Size.fromHeight(60),
               ),
               onPressed: () {
-                // شاشة الانضمام المحلي (البحث عن هوت سبوت الأصدقاء بدون نت)
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -255,7 +251,7 @@ class MainMenuScreen extends StatelessWidget {
               },
               icon: const Icon(Icons.wifi_tethering, color: Colors.white),
               label: Text(
-                isEnglish ? 'Local Play (Hotspot)' : 'لعب لوكال (بدون نت / هوت سبوت)',
+                isEnglish ? 'Local Multiplayer (Hotspot)' : 'لعب لوكال مالتيبلاير',
                 style: const TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
@@ -266,18 +262,17 @@ class MainMenuScreen extends StatelessWidget {
   }
 }
 
-// 3. شاشة إعدادات الأوض وتفاصيل الشقة وعدد اللاعبين (من 4 لـ 20)
+// 3. شاشة إعدادات الأوض والشقة بالمنطق الهندسي الدقيق
 class RoomSetupScreen extends StatefulWidget {
   final String playerName;
   final String avatarUrl;
-  final bool isHost;
+  fn: () => {};
   final bool isEnglish;
 
   const RoomSetupScreen({
     super.key,
     required this.playerName,
     required this.avatarUrl,
-    required this.isHost,
     required this.isEnglish,
   });
 
@@ -286,17 +281,41 @@ class RoomSetupScreen extends StatefulWidget {
 }
 
 class _RoomSetupScreenState extends State<RoomSetupScreen> {
-  int roomsCount = 3; // عدد الأوض
-  bool hasReception = true; // ريسبشن
-  bool hasKitchen = true; // مطبخ
-  bool hasBathroom = true; // حمام
-  double maxPlayers = 8; // أقصى عدد اللاعبين (من 4 لـ 20)
+  bool hasReception = true;
+  bool hasKitchen = true;
+  bool hasBathroom = true;
+  int roomsCount = 2; // عدد الأوض (تبدأ من 2 كحد أدنى لو فيه ريسبشن)
+  int maxPlayers = 8; // عدد اللاعبين (من 4 إلى 20)
+
+  // حساب الحد الأدنى للأوض بناءً على وجود الريسبشن والمطبخ والحمام
+  int get minRooms {
+    if (!hasReception && !hasKitchen && !hasBathroom) return 5;
+    if (!hasReception && !hasKitchen) return 4;
+    if (!hasReception) return 3;
+    return 2; // الافتراضي (مع وجود ريسبشن)
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _validateRooms();
+  }
+
+  void _validateRooms() {
+    if (roomsCount < minRooms) {
+      roomsCount = minRooms;
+    }
+    if (roomsCount > 10) {
+      roomsCount = 10;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    _validateRooms();
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEnglish ? 'Room Setup' : 'إعدادات الشقة والأوض'),
+        title: Text(widget.isEnglish ? 'Room & Apartment Setup' : 'إعدادات الغرفة والشقة'),
         backgroundColor: const Color(0xFF231145),
       ),
       body: SingleChildScrollView(
@@ -304,51 +323,68 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.isEnglish ? 'Select Number of Rooms: $roomsCount' : 'عدد أوض الشقة: $roomsCount',
-              style: const TextStyle(fontSize: 16, color: Color(0xFFFACC15)),
-            ),
-            Slider(
-              value: roomsCount.toDouble(),
-              min: 1,
-              max: 6,
-              divisions: 5,
-              activeColor: const Color(0xFF8B5CF6),
-              onChanged: (val) => setState(() => roomsCount = val.toInt()),
-            ),
-            const Divider(color: Colors.white24),
             SwitchListTile(
               title: Text(widget.isEnglish ? 'Contains Reception?' : 'هل يوجد ريسبشن؟'),
               value: hasReception,
               activeColor: const Color(0xFF8B5CF6),
-              onChanged: (val) => setState(() => hasReception = val),
+              onChanged: (val) {
+                setState(() {
+                  hasReception = val;
+                  _validateRooms();
+                });
+              },
             ),
             SwitchListTile(
               title: Text(widget.isEnglish ? 'Contains Kitchen?' : 'هل يوجد مطبخ؟'),
               value: hasKitchen,
               activeColor: const Color(0xFF8B5CF6),
-              onChanged: (val) => setState(() => hasKitchen = val),
+              onChanged: (val) {
+                setState(() {
+                  hasKitchen = val;
+                  _validateRooms();
+                });
+              },
             ),
             SwitchListTile(
               title: Text(widget.isEnglish ? 'Contains Bathroom?' : 'هل يوجد حمام؟'),
               value: hasBathroom,
               activeColor: const Color(0xFF8B5CF6),
-              onChanged: (val) => setState(() => hasBathroom = val),
+              onChanged: (val) {
+                setState(() {
+                  hasBathroom = val;
+                  _validateRooms();
+                });
+              },
             ),
-            const Divider(color: Colors.white24),
+            const Divider(color: Colors.white24, height: 30),
             Text(
               widget.isEnglish
-                  ? 'Players Count (Min 4, Max 20): ${maxPlayers.toInt()}'
-                  : 'عدد اللاعبين (من 4 إلى 20): ${maxPlayers.toInt()}',
+                  ? 'Number of Rooms (Min: $minRooms, Max: 10): $roomsCount'
+                  : 'عدد الأوض (الحد الأدنى: $minRooms، الحد الأقصى: 10): $roomsCount',
               style: const TextStyle(fontSize: 16, color: Color(0xFFFACC15)),
             ),
             Slider(
-              value: maxPlayers,
+              value: roomsCount.toDouble(),
+              min: minRooms.toDouble(),
+              max: 10,
+              divisions: (10 - minRooms > 0) ? (10 - minRooms) : 1,
+              activeColor: const Color(0xFF8B5CF6),
+              onChanged: (val) => setState(() => roomsCount = val.toInt()),
+            ),
+            const Divider(color: Colors.white24, height: 30),
+            Text(
+              widget.isEnglish
+                  ? 'Players Count (Min 4, Max 20): $maxPlayers'
+                  : 'عدد اللاعبين (من 4 إلى 20): $maxPlayers',
+              style: const TextStyle(fontSize: 16, color: Color(0xFFFACC15)),
+            ),
+            Slider(
+              value: maxPlayers.toDouble(),
               min: 4,
               max: 20,
               divisions: 16,
               activeColor: const Color(0xFF8B5CF6),
-              onChanged: (val) => setState(() => maxPlayers = val),
+              onChanged: (val) => setState(() => maxPlayers = val.toInt()),
             ),
             const SizedBox(height: 30),
             ElevatedButton(
@@ -357,14 +393,13 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                 minimumSize: const Size.fromHeight(55),
               ),
               onPressed: () {
-                // فتح لوبي الانتظار المحلي بالهوت سبوت
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => WaitingLobbyScreen(
                       playerName: widget.playerName,
                       avatarUrl: widget.avatarUrl,
-                      maxPlayers: maxPlayers.toInt(),
+                      maxPlayers: maxPlayers,
                       roomsCount: roomsCount,
                       hasReception: hasReception,
                       hasKitchen: hasKitchen,
@@ -375,7 +410,7 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                 );
               },
               child: Text(
-                widget.isEnglish ? 'Start Local Room 🚀' : 'فتح الأوضة للعب المحلي 🚀',
+                widget.isEnglish ? 'Start Room 🚀' : 'فتح الغرفة الآن 🚀',
                 style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
@@ -386,7 +421,7 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
   }
 }
 
-// 4. شاشة اللعب اللوكال والبحث عن الأصدقاء ع الشبكة بدون نت
+// 4. شاشة اللعب اللوكال (مفتوحة للبحث عبر الهوت سبوت المحلي بدون نت)
 class LocalLobbyScreen extends StatelessWidget {
   final String playerName;
   final String avatarUrl;
@@ -398,7 +433,7 @@ class LocalLobbyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEnglish ? 'Local Hotspot Rooms' : 'الأوض المتاحة على شبكتك المحلية'),
+        title: Text(isEnglish ? 'Local Multiplayer' : 'لعب لوكال مالتيبلاير'),
         backgroundColor: const Color(0xFF231145),
       ),
       body: Padding(
@@ -407,8 +442,8 @@ class LocalLobbyScreen extends StatelessWidget {
           children: [
             Text(
               isEnglish
-                  ? 'Scanning nearby devices (Hotspot / Local Network)...'
-                  : 'جاري البحث عن أصدقاء على نفس الهوت سبوت أو الشبكة المحلية...',
+                  ? 'Scanning nearby hotspot/local network rooms...'
+                  : 'جاري البحث عن غرف الأصدقاء على شبكة الهوت سبوت المحلية...',
               style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 20),
@@ -421,13 +456,11 @@ class LocalLobbyScreen extends StatelessWidget {
                     color: const Color(0xFF231145),
                     child: ListTile(
                       leading: const CircleAvatar(backgroundImage: NetworkImage('https://api.dicebear.com/7.x/bottts/png?seed=host')),
-                      title: const Text('أوضة يوسف (Buzzy House)', style: TextStyle(color: Colors.white)),
-                      subtitle: const Text('الريسبشن: موجود | الأوض: 3 | اللاعبين: 1/20', style: TextStyle(color: Colors.white60)),
+                      title: const Text('غرفة يوسف المحلية', style: TextStyle(color: Colors.white)),
+                      subtitle: const Text('ريسبشن: نعم | أوض: 3 | اللاعبين: 1/20', style: TextStyle(color: Colors.white60)),
                       trailing: ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                        onPressed: () {
-                          // الدخول للأوضة
-                        },
+                        onPressed: () {},
                         child: Text(isEnglish ? 'Join' : 'انضمام'),
                       ),
                     ),
@@ -442,7 +475,7 @@ class LocalLobbyScreen extends StatelessWidget {
   }
 }
 
-// 5. لوبي الانتظار الداخلي قبل بدء الجيم الفعلي
+// 5. لوبي الانتظار الخاص بالغرفة
 class WaitingLobbyScreen extends StatelessWidget {
   final String playerName;
   final String avatarUrl;
@@ -469,7 +502,7 @@ class WaitingLobbyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEnglish ? 'Waiting Lobby' : 'لوبي الانتظار (محلي)'),
+        title: Text(isEnglish ? 'Waiting Room' : 'لوبي الغرفة'),
         backgroundColor: const Color(0xFF231145),
       ),
       body: Padding(
@@ -477,7 +510,7 @@ class WaitingLobbyScreen extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              isEnglish ? 'Room Info / الخريطة جاهزة:' : 'تفاصيل الشقة والخريطة:',
+              isEnglish ? 'Apartment Details / تفاصيل الشقة:' : 'تفاصيل الشقة:',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFFACC15)),
             ),
             const SizedBox(height: 10),
@@ -502,11 +535,9 @@ class WaitingLobbyScreen extends StatelessWidget {
                 backgroundColor: Colors.green.shade700,
                 minimumSize: const Size.fromHeight(50),
               ),
-              onPressed: () {
-                // بدء اللعبة الفعلي داخل الشقة
-              },
+              onPressed: () {},
               child: Text(
-                isEnglish ? 'Start Game Now 🎮' : 'بدء الجيم الآن 🎮',
+                isEnglish ? 'Start Game 🎮' : 'بدء الجيم 🎮',
                 style: const TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
