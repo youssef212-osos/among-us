@@ -24,6 +24,10 @@ jobs:
           channel: 'stable'
           cache: true
 
+      # هذا السطر سيقوم بتحديث وتصليح مجلد أندرويد تلقائياً على سيرفر جيت هب
+      - name: Repair Android V2 Embedding
+        run: flutter create --platforms=android .
+
       - name: Install dependencies
         run: flutter pub get
 
