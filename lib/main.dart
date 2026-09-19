@@ -69,7 +69,7 @@ class _BuzzyAmongUsAppState extends State<BuzzyAmongUsApp> {
   }
 }
 
-// شاشة اختيار الاسم والأفاتارات (مضبوطة الارتفاع تماماً لتجنب الطول الزائد)
+// شاشة إعداد الملف الشخصي (مضبوطة بالكامل ومقيدة بمساحة الشاشة لمنع الفراغ والطول الزائد)
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
 
@@ -78,7 +78,7 @@ class ProfileSetupScreen extends StatefulWidget {
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  final TextEditingController nameController = TextEditingController(text: ''); 
+  final TextEditingController nameController = TextEditingController();
   int selectedAvatarIndex = 0;
 
   final List<String> avatars = [
@@ -97,100 +97,110 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  isArabic ? 'اختر شخصيتك واسمك' : 'Choose Your Avatar & Name',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFFFACC15)),
-                ),
-                const SizedBox(height: 20),
-                
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(color: Color(0xFF231145), shape: BoxShape.circle),
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.transparent,
-                    backgroundImage: NetworkImage(avatars[selectedAvatarIndex]),
-                  ),
-                ),
-                const SizedBox(height: 15),
-
-                // أفقية بحجم ثابت ومحدد تماماً لمنع أي تمدد غير مرغوب
-                SizedBox(
-                  height: 70,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    shrinkWrap: true,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: avatars.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () => setState(() => selectedAvatarIndex = index),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 5),
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: selectedAvatarIndex == index ? const Color(0xFF8B5CF6) : const Color(0xFF1E0C3B),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: selectedAvatarIndex == index ? Colors.white : Colors.transparent, width: 2),
-                          ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          isArabic ? 'اختر شخصيتك واسمك' : 'Choose Your Avatar & Name',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFFFACC15)),
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(color: Color(0xFF231145), shape: BoxShape.circle),
                           child: CircleAvatar(
-                            backgroundImage: NetworkImage(avatars[index]),
-                            radius: 24,
+                            radius: 40,
+                            backgroundColor: Colors.transparent,
+                            backgroundImage: NetworkImage(avatars[selectedAvatarIndex]),
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 25),
+                        const SizedBox(height: 15),
 
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: isArabic ? 'أدخل اسمك (مثال: يوسف)' : 'Enter your name (e.g. Youssef)',
-                    filled: true,
-                    fillColor: const Color(0xFF231145),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 25),
-
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  onPressed: () {
-                    if (nameController.text.isNotEmpty) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BuzzyHomeScreen(
-                            username: nameController.text,
-                            avatarUrl: avatars[selectedAvatarIndex],
+                        SizedBox(
+                          height: 70,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            shrinkWrap: true,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: avatars.length,
+                            itemBuilder: (context, index) {
+                              return GestureDetector(
+                                onTap: () => setState(() => selectedAvatarIndex = index),
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 5),
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: selectedAvatarIndex == index ? const Color(0xFF8B5CF6) : const Color(0xFF1E0C3B),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: selectedAvatarIndex == index ? Colors.white : Colors.transparent, width: 2),
+                                  ),
+                                  child: CircleAvatar(
+                                    backgroundImage: NetworkImage(avatars[index]),
+                                    radius: 24,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('⚠️ برجاء كتابة الاسم أولاً!')),
-                      );
-                    }
-                  },
-                  child: Text(isArabic ? 'دخول للعبة 🚀' : 'Enter Game 🚀', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 25),
+
+                        TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: isArabic ? 'أدخل اسمك (مثال: يوسف)' : 'Enter your name (e.g. Youssef)',
+                            filled: true,
+                            fillColor: const Color(0xFF231145),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B5CF6),
+                            minimumSize: const Size.fromHeight(50),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          onPressed: () {
+                            if (nameController.text.isNotEmpty) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BuzzyHomeScreen(
+                                    username: nameController.text,
+                                    avatarUrl: avatars[selectedAvatarIndex],
+                                  ),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('⚠️ برجاء كتابة الاسم أولاً!')),
+                              );
+                            }
+                          },
+                          child: Text(isArabic ? 'دخول للعبة 🚀' : 'Enter Game 🚀', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
