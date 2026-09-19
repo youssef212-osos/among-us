@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart' hide Router; // تم إخفاء Router لمنع التداخل
+import 'package:flutter/material.dart' hide Router;
 import 'package:bonsoir/bonsoir.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
@@ -39,7 +39,7 @@ class _BuzzyAppState extends State<BuzzyApp> {
   }
 }
 
-// 1. شاشة اختيار الأفاتار والاسم
+// 1. شاشة الملف الشخصي
 class ProfileScreen extends StatefulWidget {
   final Function() onToggleLanguage;
   final bool isEnglish;
@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Color(0xFFFACC15)),
+            icon: const Icon(Icons.language, color: Color(0xFFFACC15)),
             onPressed: widget.onToggleLanguage,
           ),
         ],
@@ -90,7 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    widget.isEnglish ? 'Choose your Avatar & Name' : 'اختر صورتك واسمك الحقيقي',
+                    widget.isEnglish ? 'Choose Avatar & Name' : 'اختر صورتك واسمك الحقيقي',
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFFACC15)),
                   ),
                   const SizedBox(height: 20),
@@ -132,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
-                      labelText: widget.isEnglish ? 'Enter your actual name' : 'أدخل اسمك الحقيقي',
+                      labelText: widget.isEnglish ? 'Enter your name' : 'أدخل اسمك الحقيقي',
                       filled: true,
                       fillColor: const Color(0xFF231145),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -146,9 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     onPressed: () {
                       String name = nameController.text.trim();
-                      if (name.isEmpty) {
-                        name = widget.isEnglish ? 'Player' : 'لاعب';
-                      }
+                      if (name.isEmpty) name = widget.isEnglish ? 'Player' : 'لاعب';
 
                       Navigator.push(
                         context,
@@ -271,24 +269,14 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
   bool hasKitchen = true;
   bool hasBathroom = true;
   int roomsCount = 2;
-  int maxPlayers = 8;
-
-  int get minRooms {
-    if (!hasReception && !hasKitchen && !hasBathroom) return 5;
-    if (!hasReception && !hasKitchen) return 4;
-    if (!hasReception) return 3;
-    return 2;
-  }
 
   @override
   Widget build(BuildContext context) {
-    if (roomsCount < minRooms) roomsCount = minRooms;
     return Scaffold(
       appBar: AppBar(title: Text(widget.isEnglish ? 'Room Setup' : 'إعدادات الغرفة')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SwitchListTile(
               title: Text(widget.isEnglish ? 'Contains Reception?' : 'هل يوجد ريسبشن؟'),
@@ -306,15 +294,6 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
               onChanged: (val) => setState(() => hasBathroom = val),
             ),
             const Divider(color: Colors.white24, height: 30),
-            Text('عدد الأوض: $roomsCount (الحد الأدنى: $minRooms)', style: const TextStyle(color: Color(0xFFFACC15))),
-            Slider(
-              value: roomsCount.toDouble(),
-              min: minRooms.toDouble(),
-              max: 10,
-              divisions: 10 - minRooms > 0 ? 10 - minRooms : 1,
-              onChanged: (val) => setState(() => roomsCount = val.toInt()),
-            ),
-            const SizedBox(height: 30),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6), minimumSize: const Size.fromHeight(55)),
               onPressed: () {
@@ -324,8 +303,6 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
                     builder: (context) => HostWaitingRoom(
                       playerName: widget.playerName,
                       avatarUrl: widget.avatarUrl,
-                      roomsCount: roomsCount,
-                      maxPlayers: maxPlayers,
                       isEnglish: widget.isEnglish,
                     ),
                   ),
@@ -344,18 +321,9 @@ class _RoomSetupScreenState extends State<RoomSetupScreen> {
 class HostWaitingRoom extends StatefulWidget {
   final String playerName;
   final String avatarUrl;
-  final int roomsCount;
-  final int maxPlayers;
   final bool isEnglish;
 
-  const HostWaitingRoom({
-    super.key,
-    required this.playerName,
-    required this.avatarUrl,
-    required this.roomsCount,
-    required this.maxPlayers,
-    required this.isEnglish,
-  });
+  const HostWaitingRoom({super.key, required this.playerName, required this.avatarUrl, required this.isEnglish});
 
   @override
   State<HostWaitingRoom> createState() => _HostWaitingRoomState();
@@ -370,11 +338,7 @@ class _HostWaitingRoomState extends State<HostWaitingRoom> {
   @override
   void initState() {
     super.initState();
-    connectedPlayers.add({
-      'name': widget.playerName,
-      'avatar': widget.avatarUrl,
-      'isHost': true,
-    });
+    connectedPlayers.add({'name': widget.playerName, 'avatar': widget.avatarUrl, 'isHost': true});
     _startRealServer();
   }
 
@@ -395,7 +359,6 @@ class _HostWaitingRoomState extends State<HostWaitingRoom> {
         return shelf.Response.ok(jsonEncode({
           'status': 'success',
           'players': connectedPlayers,
-          'rooms': widget.roomsCount,
         }), headers: {'Content-Type': 'application/json'});
       });
 
@@ -429,37 +392,51 @@ class _HostWaitingRoomState extends State<HostWaitingRoom> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.isEnglish ? 'Hosting Room...' : 'غرفة المضيف (بانتظار الأصدقاء)')),
+      appBar: AppBar(title: Text(widget.isEnglish ? 'Host Room' : 'غرفة المضيف')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             Text(
-              isServerStarted
-                  ? (widget.isEnglish ? 'Server Active! Share Hotspot' : 'السيرفر شغال وفي انتظار اتصال الأصدقاء على الهوت سبوت...')
-                  : (widget.isEnglish ? 'Starting Server...' : 'جاري تشغيل السيرفر المحلي...'),
+              isServerStarted ? 'السيرفر جاهز لربط الأصدقاء 🟢' : 'جاري تشغيل السيرفر...',
               style: TextStyle(color: isServerStarted ? Colors.greenAccent : Colors.orangeAccent),
             ),
-            const SizedBox(height: 15),
-            Text('الغرفة الخاصة بـ: ${widget.playerName}', style: const TextStyle(fontSize: 16, color: Color(0xFFFACC15))),
-            const Divider(color: Colors.white24, height: 30),
+            const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
                 itemCount: connectedPlayers.length,
                 itemBuilder: (context, index) {
-                  var player = connectedPlayers[index];
+                  var p = connectedPlayers[index];
                   return ListTile(
-                    leading: CircleAvatar(backgroundImage: NetworkImage(player['avatar'])),
-                    title: Text(player['name'], style: const TextStyle(color: Colors.white)),
-                    subtitle: Text(player['isHost'] ? (widget.isEnglish ? 'Host' : 'المضيف') : (widget.isEnglish ? 'Player' : 'لاعب منضم')),
+                    leading: CircleAvatar(backgroundImage: NetworkImage(p['avatar'])),
+                    title: Text(p['name'], style: const TextStyle(color: Colors.white)),
+                    subtitle: Text(p['isHost'] ? 'المضيف (الأدمن)' : 'لاعب منضم'),
                   );
                 },
               ),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700, minimumSize: const Size.fromHeight(50)),
-              onPressed: connectedPlayers.length > 1 ? () {} : null,
-              child: Text(widget.isEnglish ? 'Start Game 🎮' : 'ابدأ اللعبة مع اللاعبين 🎮', style: const TextStyle(fontSize: 18)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade700,
+                minimumSize: const Size.fromHeight(55),
+              ),
+              onPressed: () {
+                // الانتقال المباشر لشاشة اللعبة الحقيقية!
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GameplayScreen(
+                      playerName: widget.playerName,
+                      isHost: true,
+                      isEnglish: widget.isEnglish,
+                    ),
+                  ),
+                );
+              },
+              child: Text(
+                widget.isEnglish ? 'Start Game Now 🎮' : 'ابدأ اللعبة الآن 🎮',
+                style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -526,15 +503,13 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
       var response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
         if (!mounted) return;
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ClientWaitingRoom(
+            builder: (context) => GameplayScreen(
               playerName: widget.playerName,
-              avatarUrl: widget.avatarUrl,
-              roomData: data,
+              isHost: false,
               isEnglish: widget.isEnglish,
             ),
           ),
@@ -542,9 +517,7 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل الاتصال بالغرفة: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ في الانضمام: $e')));
     }
   }
 
@@ -557,44 +530,25 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.isEnglish ? 'Local Rooms' : 'البحث عن غرف محلية')),
+      appBar: AppBar(title: Text(widget.isEnglish ? 'Searching Rooms' : 'البحث عن غرف')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Text(
-              isScanning
-                  ? (widget.isEnglish ? 'Scanning nearby local rooms...' : 'جاري البحث في شبكة الهوت سبوت عن غرف الأصدقاء...')
-                  : (widget.isEnglish ? 'Scan stopped' : 'تم إيقاف البحث'),
-              style: const TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 10),
             if (isScanning) const LinearProgressIndicator(color: Color(0xFF8B5CF6)),
             const SizedBox(height: 20),
             Expanded(
               child: foundRooms.isEmpty
-                  ? Center(
-                      child: Text(
-                        widget.isEnglish ? 'No rooms found yet.' : 'مفيش غرف لقتها لغاية دلوقتي.. تأكد إن صاحبك فتح غرفة على نفس الشبكة!',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white54),
-                      ),
-                    )
+                  ? Center(child: Text(widget.isEnglish ? 'No rooms found...' : 'جاري البحث عن غرف مفتوحة...'))
                   : ListView.builder(
                       itemCount: foundRooms.length,
                       itemBuilder: (context, index) {
                         var room = foundRooms[index];
-                        return Card(
-                          color: const Color(0xFF231145),
-                          child: ListTile(
-                            leading: const Icon(Icons.meeting_room, color: Color(0xFFFACC15), size: 35),
-                            title: Text(room.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            subtitle: Text('IP: ${room.host}:${room.port}', style: const TextStyle(color: Colors.white60)),
-                            trailing: ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                              onPressed: () => _joinRoom(room),
-                              child: Text(widget.isEnglish ? 'Join' : 'انضمام'),
-                            ),
+                        return ListTile(
+                          title: Text(room.name, style: const TextStyle(color: Colors.white)),
+                          trailing: ElevatedButton(
+                            onPressed: () => _joinRoom(room),
+                            child: Text(widget.isEnglish ? 'Join' : 'انضمام'),
                           ),
                         );
                       },
@@ -607,38 +561,126 @@ class _LocalLobbyScreenState extends State<LocalLobbyScreen> {
   }
 }
 
-// 6. واجهة العميل بعد الانضمام
-class ClientWaitingRoom extends StatelessWidget {
+// 6. شاشة اللعبة الحقيقية (Gameplay Screen)
+class GameplayScreen extends StatefulWidget {
   final String playerName;
-  final String avatarUrl;
-  final Map<String, dynamic> roomData;
+  final bool isHost;
   final bool isEnglish;
 
-  const ClientWaitingRoom({super.key, required this.playerName, required this.avatarUrl, required this.roomData, required this.isEnglish});
+  const GameplayScreen({
+    super.key,
+    required this.playerName,
+    required this.isHost,
+    required this.isEnglish,
+  });
+
+  @override
+  State<GameplayScreen> createState() => _GameplayScreenState();
+}
+
+class _GameplayScreenState extends State<GameplayScreen> {
+  bool isImpostor = false;
+  int completedTasks = 0;
+  final int totalTasks = 3;
+
+  @override
+  void initState() {
+    super.initState();
+    // تحديد دور أسبوعي عشوائي (محتال أم بريء)
+    isImpostor = widget.playerName.length % 2 == 0;
+  }
+
+  void completeTask() {
+    if (completedTasks < totalTasks) {
+      setState(() {
+        completedTasks++;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    List players = roomData['players'] ?? [];
     return Scaffold(
-      appBar: AppBar(title: Text(isEnglish ? 'Joined Room' : 'غرفة الانتظار (منضم بنجاح)')),
+      appBar: AppBar(
+        title: Text(widget.isEnglish ? 'In-Game Action 🎮' : 'أرض اللعبة 🎮'),
+        backgroundColor: const Color(0xFF231145),
+        automaticallyImplyLeading: false,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(isEnglish ? 'Successfully joined the room!' : 'تم الانضمام بنجاح لغرفة صديقك على الشبكة المحليّة! 🚀', style: const TextStyle(color: Colors.greenAccent, fontSize: 16)),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView.builder(
-                itemCount: players.length,
-                itemBuilder: (context, index) {
-                  var p = players[index];
-                  return ListTile(
-                    leading: CircleAvatar(backgroundImage: NetworkImage(p['avatar'])),
-                    title: Text(p['name'], style: const TextStyle(color: Colors.white)),
-                    subtitle: Text(p['isHost'] ? (isEnglish ? 'Host' : 'المضيف') : (isEnglish ? 'Player' : 'لاعب')),
-                  );
-                },
+            // كارت الدور (محتال أم بريء)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isImpostor ? Colors.red.shade900 : Colors.blue.shade900,
+                borderRadius: BorderRadius.circular(15),
               ),
+              child: Column(
+                children: [
+                  Text(
+                    isImpostor ? '🎭 أنت المحتال (Impostor)' : '🛡️ أنت لاعب بريء (Crewmate)',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    isImpostor
+                        ? 'مهمتك: القضاء على اللاعبين بدون كشفك!'
+                        : 'مهمتك: إنهاء المهام واكتشاف المحتال!',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            // شريط تقدم المهام
+            Text('المهام المكتملة: $completedTasks / $totalTasks', style: const TextStyle(color: Color(0xFFFACC15))),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: completedTasks / totalTasks,
+              backgroundColor: Colors.white12,
+              color: Colors.greenAccent,
+              minHeight: 12,
+            ),
+            const SizedBox(height: 30),
+
+            // أزرار التحكم باللعبة
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF231145)),
+                    onPressed: completeTask,
+                    icon: const Icon(Icons.build, color: Colors.amber),
+                    label: Text(widget.isEnglish ? 'Do Task' : 'تنفيذ مهمة 🛠️'),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade800),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('🚨 تم إعلان حالة الطوارئ واستدعاء اجتماع!')),
+                      );
+                    },
+                    icon: const Icon(Icons.warning, color: Colors.white),
+                    label: Text(widget.isEnglish ? 'Emergency' : 'زر الطوارئ 🚨'),
+                  ),
+                ],
+              ),
+            ),
+
+            // زر الخروج للرئيسية
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
+              onPressed: () {
+                Navigator.popUntil(context, (route) => route.isFirst);
+              },
+              child: Text(widget.isEnglish ? 'Leave Game' : 'مغادرة اللعبة'),
             ),
           ],
         ),
