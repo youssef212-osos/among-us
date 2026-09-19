@@ -111,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () {
                       String name = nameController.text.trim();
                       if (name.isEmpty) {
-                        name = 'لاعب مجهول'; // لو نسي يكتب اسم، بنديله اسم افتراضي عشان الزرار ما يعلقش
+                        name = 'لاعب مجهول';
                       }
                       
                       Navigator.push(
