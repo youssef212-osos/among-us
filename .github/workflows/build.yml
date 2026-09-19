@@ -6,10 +6,10 @@ on:
 
 jobs:
   build:
-print('Building...');
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -20,7 +20,7 @@ print('Building...');
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.x' # أو أحدث إصدار مستقر كنت شغال عليه
+          flutter-version: '3.19.x'
           channel: 'stable'
           cache: true
 
