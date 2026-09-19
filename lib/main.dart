@@ -29,7 +29,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController nameController = TextEditingController();
   int selectedIndex = 0;
-  bool isButtonEnabled = false;
 
   final List<String> avatars = [
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_1.png',
@@ -37,16 +36,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_3.png',
     'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_4.png',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    nameController.addListener(() {
-      setState(() {
-        isButtonEnabled = nameController.text.trim().isNotEmpty;
-      });
-    });
-  }
 
   @override
   void dispose() {
@@ -117,28 +106,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5CF6),
-                      disabledBackgroundColor: Colors.grey.shade850,
                       minimumSize: const Size.fromHeight(50),
                     ),
-                    onPressed: isButtonEnabled
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => GameScreen(
-                                  playerName: nameController.text.trim(),
-                                  avatarUrl: avatars[selectedIndex],
-                                ),
-                              ),
-                            );
-                          }
-                        : null,
-                    child: Text(
+                    onPressed: () {
+                      String name = nameController.text.trim();
+                      if (name.isEmpty) {
+                        name = 'لاعب مجهول'; // لو نسي يكتب اسم، بنديله اسم افتراضي عشان الزرار ما يعلقش
+                      }
+                      
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GameScreen(
+                            playerName: name,
+                            avatarUrl: avatars[selectedIndex],
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
                       'دخول للعبة 🚀',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: isButtonEnabled ? Colors.white : Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
                 ],
@@ -151,7 +139,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// شاشة اللعبة المؤقتة عشان تتأكد إن الزرار نقل البيانات صح
 class GameScreen extends StatelessWidget {
   final String playerName;
   final String avatarUrl;
