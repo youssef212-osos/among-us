@@ -98,9 +98,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: Center(
+        child: SizedBox.expand(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -109,7 +109,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   isArabic ? 'اختر شخصيتك واسمك' : 'Choose Your Avatar & Name',
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFFFACC15)),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 
                 Container(
                   padding: const EdgeInsets.all(8),
@@ -118,12 +118,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: CircleAvatar(
-                    radius: 42,
+                    radius: 40,
                     backgroundColor: Colors.transparent,
                     backgroundImage: NetworkImage(avatars[selectedAvatarIndex]),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 15),
 
                 SizedBox(
                   height: 65,
@@ -135,7 +135,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       return GestureDetector(
                         onTap: () => setState(() => selectedAvatarIndex = index),
                         child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          margin: const EdgeInsets.symmetric(horizontal: 5),
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: selectedAvatarIndex == index ? const Color(0xFF8B5CF6) : const Color(0xFF1E0C3B),
@@ -154,7 +154,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 TextField(
                   controller: nameController,
@@ -168,7 +168,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -208,7 +208,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 }
 
 class BuzzyHomeScreen extends StatelessWidget {
-  final String username;
+  finalString username;
   final String avatarUrl;
 
   const BuzzyHomeScreen({super.key, required this.username, required this.avatarUrl});
