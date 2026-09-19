@@ -13,6 +13,11 @@ jobs:
         with:
           flutter-version: '3.x'
           channel: 'stable'
+      
+      # الخطوة دي هي اللي بتعوض ملف الـ android المفقود وتنشئه أوتوماتيك
+      - name: Create Android directory if missing
+        run: flutter create . --platforms=android --org com.buzzy.party
+        
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
